@@ -72,9 +72,12 @@ def setup_playwright():
     """Ensure Playwright Chromium is available on Streamlit Cloud."""
     try:
         import subprocess, sys
-        subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False, timeout=120)
-    except Exception as e:
-        print("Setup notice:", e)
+        subprocess.run(["playwright", "install", "chromium"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False, timeout=120)
+    except Exception:
+        try:
+            subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False, timeout=120)
+        except Exception as e:
+            print("Setup notice:", e)
 
 setup_playwright()
 
