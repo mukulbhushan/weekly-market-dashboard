@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Executive Weekly Market Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  :root{
+    --bg:#FFFFFF;          /* Pure White Background */
+    --panel:#FFFFFF;       /* Pure White Card Containers */
+    --panel-2:#F8FAFC;     /* Light Slate Secondary Container Fill */
+    --border:#E2E8F0;      /* Crisp Light Border */
+    --text:#0F172A;        /* Rich Dark Slate Heading & Body Text */
+    --text-dim:#475569;    /* Dark Secondary Text */
+    --text-faint:#64748B;   /* Muted Caption Text */
+    --gold:#B45309;        /* Deep Amber Gold Accent */
+    --gold-dim:#92400E;
+    --gold-bg:#FEF3C7;     /* Light Gold Container Tint */
+    --green:#15803D;       /* Deep Emerald Green */
+    --red:#DC2626;         /* Deep Crimson Red */
+    --blue:#1D4ED8;        /* Royal Blue */
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:30px;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .serif{font-family:'Newsreader',serif;}
+
+  #pageWrapper {
+    width: 100%;
+    max-width: 1340px;
+    margin: 0 auto;
+    background: var(--bg);
+  }
+
+  /* ===== Masthead with Logo ===== */
+  header.masthead{
+    border-bottom:1px solid var(--border);
+    padding:16px 32px 12px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:14px;
+    background: #FFFFFF;
+  }
+  .masthead-brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .masthead-logo {
+    height: 42px;
+    width: auto;
+    object-fit: contain;
+  }
+  .masthead-left .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    letter-spacing:0.16em;
+    color:var(--gold);
+    text-transform:uppercase;
+    margin-bottom:2px;
+    font-weight: 600;
+  }
+  .masthead-left h1{
+    font-family:'Newsreader',serif;
+    font-weight:600;
+    font-style:normal;
+    font-size:26px;
+    color:var(--text);
+    letter-spacing:0.01em;
+  }
+  .masthead-right{
+    text-align:right;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--text-dim);
+    line-height:1.45;
+  }
+  .masthead-right .stamp{
+    display:inline-block;
+    border:1px solid var(--gold);
+    background: var(--gold-bg);
+    color:var(--gold);
+    padding:3px 10px;
+    border-radius:3px;
+    font-size:10px;
+    letter-spacing:0.06em;
+    margin-bottom:4px;
+    font-weight: 600;
+  }
+  .pdf-btn {
+    background: var(--gold);
+    color: #FFFFFF;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+    transition: all 0.2s ease;
+  }
+
+  /* ===== Takeaways Box (Weekly Executive Key Insights & Market Summary) ===== */
+  .takeaways-box {
+    margin: 12px 32px 0;
+    background: #FFFBEB;
+    border: 1px solid #FDE68A;
+    border-radius: 6px;
+    padding: 12px 16px;
+  }
+  .takeaways-head {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--gold);
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .takeaways-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .takeaways-list li {
+    font-size: 12px;
+    color: #78350F;
+    line-height: 1.4;
+    position: relative;
+    padding-left: 16px;
+    font-weight: 500;
+  }
+  .takeaways-list li::before {
+    content: "•";
+    position: absolute;
+    left: 2px;
+    color: var(--gold);
+    font-size: 14px;
+  }
+
+  /* ===== Premium Spot Strip Bar (Visible in PDF & Web) ===== */
+  .spot-strip-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #F8FAFC;
+    border: 1px solid #CBD5E1;
+    border-left: 4px solid var(--gold);
+    border-radius: 6px;
+    padding: 7px 14px;
+    margin: 8px 32px 0;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  }
+  .spot-strip-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--gold);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    padding-right: 14px;
+    border-right: 1px solid #CBD5E1;
+  }
+  .spot-dot {
+    width: 7px;
+    height: 7px;
+    background: var(--gold);
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .spot-items-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    flex: 1;
+    gap: 16px;
+    padding-left: 14px;
+  }
+  .spot-item {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .spot-item .spot-name {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--text-dim);
+    letter-spacing: 0.03em;
+  }
+  .spot-item .spot-val {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .spot-item .spot-chg {
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .spot-item .spot-chg.up { color: var(--green); }
+  .spot-item .spot-chg.down { color: var(--red); }
+  .spot-divider {
+    height: 16px;
+    width: 1px;
+    background: #CBD5E1;
+  }
+
+  /* ===== Ticker ===== */
+  .ticker-wrap{
+    border-bottom:1px solid var(--border);
+    border-top:1px solid var(--border);
+    background:var(--panel-2);
+    overflow:hidden;
+    position:relative;
+    white-space:nowrap;
+    margin-top: 12px;
+  }
+  .ticker-track{
+    display:inline-flex;
+    animation: scroll-left 32s linear infinite;
+    padding:8px 0;
+  }
+  @keyframes scroll-left{
+    0%{ transform:translateX(0); }
+    100%{ transform:translateX(-50%); }
+  }
+  .ticker-item{
+    display:inline-flex;
+    align-items:baseline;
+    gap:8px;
+    padding:0 24px;
+    border-right:1px solid var(--border);
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .ticker-item .name{ font-size:11px; color:var(--text-dim); }
+  .ticker-item .close{ font-size:13px; color:var(--text); font-weight:600; }
+  .ticker-item .chg{ font-size:11px; font-weight:600; }
+  .up{ color:var(--green); }
+  .down{ color:var(--red); }
+
+  /* ===== Layout ===== */
+  main{
+    padding:16px 32px 0;
+    display:grid;
+    grid-template-columns:repeat(12, 1fr);
+    gap:14px;
+  }
+  section.panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:12px 16px 14px;
+    position:relative;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .span-12{ grid-column:span 12; }
+  .span-8{ grid-column:span 8; }
+  .span-4{ grid-column:span 4; }
+  .span-6{ grid-column:span 6; }
+  .span-7{ grid-column:span 7; }
+  .span-5{ grid-column:span 5; }
+
+  .panel-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:8px;
+    border-bottom:1px solid var(--border);
+    padding-bottom:5px;
+  }
+  .panel-head h2{
+    font-family:'Newsreader',serif;
+    font-weight:600;
+    font-size:16px;
+    color:var(--text);
+  }
+  .panel-head .tag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:9px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+  }
+
+  /* ===== Macro Mini Cards ===== */
+  .macro-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    margin-bottom: 2px;
+  }
+  .macro-card {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 8px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .macro-card .m-lbl { font-size: 9px; color: var(--gold); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+  .macro-card .m-val { font-size: 14px; font-weight: 600; color: var(--text); margin: 2px 0 1px; }
+  .macro-card .m-sub { font-size: 9.5px; }
+
+  /* ===== Weekly News Segment ===== */
+  .news-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .news-col h3 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.08em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    padding-bottom: 3px;
+    border-bottom: 1px solid var(--border);
+  }
+  .news-card {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    padding: 6px 8px;
+    border-radius: 4px;
+    margin-bottom: 5px;
+  }
+  .news-card:last-child { margin-bottom: 0; }
+  .news-card .n-header { display: flex; justify-content: space-between; font-size: 9.5px; color: var(--text-faint); font-family: 'IBM Plex Mono', monospace; margin-bottom: 2px; }
+  .news-card .n-title { font-weight: 600; font-size: 11px; color: var(--text); margin-bottom: 2px; line-height: 1.3; }
+  .news-card .n-impact { font-size: 10.5px; color: var(--text-dim); line-height: 1.3; }
+
+  table{ width:100%; border-collapse:collapse; table-layout:fixed; }
+  th+th, td+td{ padding-left:10px; }
+  td{ overflow-wrap:anywhere; }
+
+  /* ===== Fixed Column Geometry (keeps every header/value column aligned) ===== */
+  .t-index th:nth-child(1){ width:24%; }
+  .t-index th:nth-child(2){ width:16%; }
+  .t-index th:nth-child(3){ width:14%; }
+  .t-index th:nth-child(4){ width:12%; }
+  .t-index th:nth-child(5){ width:17%; }
+  .t-index th:nth-child(6){ width:17%; }
+
+  .t-heatmap th:nth-child(1){ width:30%; }
+  .t-heatmap th:nth-child(2){ width:20%; }
+  .t-heatmap th:nth-child(3){ width:16%; }
+  .t-heatmap th:nth-child(4){ width:34%; }
+
+  .t-val th:nth-child(1){ width:32%; }
+  .t-val th:nth-child(2){ width:15%; }
+  .t-val th:nth-child(3){ width:15%; }
+  .t-val th:nth-child(4){ width:38%; }
+
+  .t-bulk th:nth-child(1){ width:26%; }
+  .t-bulk th:nth-child(2){ width:32%; }
+  .t-bulk th:nth-child(3){ width:20%; }
+  .t-bulk th:nth-child(4){ width:22%; }
+
+  .t-ipo th:nth-child(1){ width:30%; }
+  .t-ipo th:nth-child(2){ width:16%; }
+  .t-ipo th:nth-child(3){ width:30%; }
+  .t-ipo th:nth-child(4){ width:24%; }
+
+  .t-econ th:nth-child(1){ width:15%; }
+  .t-econ th:nth-child(2){ width:7%; }
+  .t-econ th:nth-child(3){ width:25%; }
+  .t-econ th:nth-child(4){ width:15%; }
+  .t-econ th:nth-child(5){ width:38%; }
+
+  .t-board th:nth-child(1){ width:22%; }
+  .t-board th:nth-child(2){ width:28%; }
+  .t-board th:nth-child(3){ width:13%; }
+  .t-board th:nth-child(4){ width:37%; }
+
+  .t-earn th:nth-child(1){ width:22%; }
+  .t-earn th:nth-child(2){ width:11%; }
+  .t-earn th:nth-child(3){ width:11%; }
+  .t-earn th:nth-child(4){ width:56%; }
+
+  th{
+    text-align:left;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:9px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+    font-weight:600;
+    padding:0 4px 4px 0;
+    border-bottom:1px solid var(--border);
+  }
+  td{
+    padding:4px 4px 4px 0;
+    border-bottom:1px solid #F1F5F9;
+    font-size:11px;
+    color:var(--text);
+    vertical-align:top;
+  }
+  td.num, th.num{ font-family:'IBM Plex Mono',monospace; text-align:right; }
+  tr:last-child td{ border-bottom:none; }
+  .company{ font-weight:600; word-break: break-word; }
+  .ticker-sub{ color:var(--text-faint); font-size:9.5px; font-family:'IBM Plex Mono',monospace; }
+
+  .pill{
+    display:inline-block;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:9px;
+    letter-spacing:0.04em;
+    padding:1px 5px;
+    border-radius:6px;
+    border:1px solid;
+  }
+  .pill.bearish,.pill.underperforming{ color:var(--red); border-color:#FCA5A5; background:#FEF2F2; }
+  .pill.bullish,.pill.outperforming{ color:var(--green); border-color:#86EFAC; background:#F0FDF4; }
+  .pill.neutral{ color:var(--text-dim); border-color:#E2E8F0; background:#F8FAFC; }
+  .pill.undervalued{ color:var(--green); border-color:#86EFAC; background:#F0FDF4; }
+  .pill.elevated{ color:var(--gold); border-color:#FDE68A; background:#FEF3C7; }
+  .pill.fair{ color:var(--blue); border-color:#BFDBFE; background:#EFF6FF; }
+
+  .stat-row{ display:flex; gap:12px; margin-bottom:8px; flex-wrap:wrap; }
+  .stat{ flex:1; min-width:80px; }
+  .stat .label{ font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:0.05em; text-transform:uppercase; color:var(--text-faint); margin-bottom:1px; }
+  .stat .value{ font-family:'IBM Plex Mono',monospace; font-size:16px; font-weight:600; }
+  .stat .sub{ font-size:9.5px; color:var(--text-dim); margin-top:1px; }
+
+  .note{
+    font-size:10.5px;
+    color:var(--text-dim);
+    line-height:1.4;
+    margin-top:6px;
+    padding-top:6px;
+    border-top:1px dashed var(--border);
+  }
+
+  /* Seamless MTD Net Flows Styling Badge */
+  .mtd-flows-badge {
+    margin-top: 6px;
+    padding: 6px 10px;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .mtd-flows-badge span.flow-val {
+    font-weight: 700;
+  }
+
+  .chart-box{ position:relative; height:150px; margin-top:2px; }
+
+  footer{
+    padding:10px 32px;
+    border-top:1px solid var(--border);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    color:var(--text-faint);
+    display:flex;
+    justify-content:space-between;
+    margin-top: 14px;
+    background: #FFFFFF;
+  }
+
+  /* ===== EXACT 2-PAGE PRINT / PDF GEOMETRY (A3 Landscape, 1:1 scale) =====
+     Each .pdf-page is a real, physical page box. Content is measured and
+     auto-fitted into it before printing, so nothing is clipped, nothing
+     bleeds onto a third page, and both pages carry identical margins. */
+  @page { size: 420mm 297mm; margin: 0; }
+
+  @media print {
+    html, body {
+      width: auto;
+      margin: 0;
+      padding: 0;
+      background: #FFFFFF;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    #pageWrapper {
+      width: auto;
+      max-width: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .pdf-page {
+      position: relative;
+      width: 420mm;
+      height: 297mm;
+      padding: 9mm 10mm 15mm;   /* bottom padding reserves the footer strip */
+      overflow: hidden;
+      background: #FFFFFF;
+      break-after: page;
+      page-break-after: always;
+    }
+    .pdf-page:last-of-type { break-after: auto; page-break-after: auto; }
+
+    .page-inner {
+      width: 100%;
+      transform-origin: top center;  /* auto-fit shrink stays horizontally centred */
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .ticker-wrap, .pdf-btn { display: none !important; }
+
+    .spot-strip-bar {
+      margin: 0;
+      padding: 5px 12px;
+      border: 1px solid #CBD5E1;
+      border-left: 4px solid var(--gold);
+      background: #F8FAFC !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      box-shadow: none;
+    }
+    .spot-item .spot-name { font-size: 10px; }
+    .spot-item .spot-val { font-size: 13px; }
+    .spot-item .spot-chg { font-size: 10.5px; }
+
+    header.masthead {
+      padding: 0 0 8px;
+      border-bottom: 2px solid var(--gold);
+      gap: 20px;
+    }
+    .masthead-logo { height: 40px; }
+    .masthead-right { line-height: 1.5; }
+
+    .takeaways-box { margin: 0; padding: 8px 12px; }
+    .takeaways-list li { font-size: 11.5px; }
+
+    main {
+      padding: 0;
+      gap: 10px;
+      flex: 1 1 auto;
+      align-content: start;   /* leftover height is distributed by preparePdfLayout() */
+    }
+
+    section.panel {
+      box-shadow: none;
+      border-color: #CBD5E1;
+      padding: 8px 12px 10px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .chart-box { height: 175px; }
+
+    footer.page-footer {
+      position: absolute;
+      left: 10mm;
+      right: 10mm;
+      bottom: 7mm;
+      margin: 0;
+      padding: 5px 0 0;
+      background: transparent;
+    }
+  }
+
+  /* Responsive rules are screen-only: the print/PDF layout must never
+     collapse into the narrow-viewport stack. */
+  @media screen and (max-width:900px){
+    main{ grid-template-columns:repeat(4,1fr); padding:16px 16px 0; }
+    .span-12,.span-8,.span-4,.span-6,.span-7,.span-5{ grid-column:span 4; }
+    .macro-grid { grid-template-columns: repeat(2, 1fr); }
+    .news-grid { grid-template-columns: 1fr; }
+    .takeaways-box { margin: 12px 16px 0; }
+    header.masthead{ padding:16px 16px 12px; }
+    .masthead-right{ text-align:left; }
+    footer{ padding:10px 16px; flex-direction:column; gap:4px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="pageWrapper">
+
+<!-- ===== PAGE 1 CONTENT ===== -->
+<div id="page1Section" class="pdf-page">
+<div class="page-inner">
+
+<header class="masthead">
+  <div class="masthead-brand">
+    <img src="raru_logo.png" alt="Raru Logo" class="masthead-logo">
+    <div class="masthead-left">
+      <div class="eyebrow">Portfolio &amp; Executive Research Desk</div>
+      <h1>Executive Weekly Market Dashboard</h1>
+    </div>
+  </div>
+  <div class="masthead-right">
+    <span class="stamp">Last Updated: 17 Aug 2026, 02:46 PM</span><br>
+    Executive Briefing Report (Page 1 of 2)<br>
+    All flows in ₹ Crore unless noted<br>
+    <button class="pdf-btn" onclick="exportPDF()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export PDF
+    </button>
+  </div>
+</header>
+
+<!-- Live Benchmark Spot Price Strip (Visible in PDF & Web) -->
+<div class="spot-strip-bar">
+  <div class="spot-strip-badge"><span class="spot-dot"></span> LIVE SPOT BENCHMARKS</div>
+  <div class="spot-items-wrapper" id="spotStripPage1"></div>
+</div>
+
+<!-- Executive Summary Takeaways Box -->
+<div class="takeaways-box">
+  <div class="takeaways-head">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    Weekly Executive Key Insights &amp; Market Summary
+  </div>
+  <ul class="takeaways-list" id="takeawaysList"></ul>
+</div>
+
+<div class="ticker-wrap">
+  <div class="ticker-track" id="tickerTrack"></div>
+</div>
+
+<main id="dashboardContentPage1">
+
+  <!-- Macro & MCX Commodities Card Bar -->
+  <section class="panel span-12">
+    <div class="panel-head"><h2>Global Macro, MCX Bullion &amp; Risk Read</h2><span class="tag">MCX Rates · FX · Commodities</span></div>
+    <div class="macro-grid" id="macroGrid"></div>
+  </section>
+
+  <!-- Market Breadth -->
+  <section class="panel span-4">
+    <div class="panel-head"><h2>Market Breadth</h2><span class="tag">Nifty 50 / Nifty 500</span></div>
+    <div class="stat-row">
+      <div class="stat">
+        <div class="label">Advancing</div>
+        <div class="value" style="color:var(--green)">26</div>
+        <div class="sub">Nifty 500: 256</div>
+      </div>
+      <div class="stat">
+        <div class="label">Declining</div>
+        <div class="value" style="color:var(--red)">24</div>
+        <div class="sub">Nifty 500: 243</div>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong style="color:var(--text)">Valuation Snapshot</strong><br>
+      Nifty 50 P/E <span class="mono">20.56</span> — fair 5-yr average.<br>
+      Nifty 500 P/E <span class="mono">22.94</span>.
+    </div>
+  </section>
+
+  <!-- Index summary -->
+  <section class="panel span-8">
+    <div class="panel-head"><h2>Executive Index Benchmark Summary</h2><span class="tag">Market Close</span></div>
+    <table class="t-index">
+      <thead><tr>
+        <th>Index</th><th class="num">Close</th><th class="num">Pts Chg</th><th class="num">% Chg</th><th class="num">Weekly High</th><th class="num">Weekly Low</th>
+      </tr></thead>
+      <tbody id="indexTable"></tbody>
+    </table>
+  </section>
+
+  <!-- Categorized Weekly Top News Segment -->
+  <section class="panel span-12">
+    <div class="panel-head"><h2>Weekly Top News Digest</h2><span class="tag">Macro &amp; India Market News</span></div>
+    <div class="news-grid">
+      <div class="news-col">
+        <h3>🌍 Macro &amp; Global News</h3>
+        <div id="macroNewsContainer"></div>
+      </div>
+      <div class="news-col">
+        <h3>🇮🇳 India Market News</h3>
+        <div id="indiaNewsContainer"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sector Performance Heatmap -->
+  <section class="panel span-12">
+    <div class="panel-head"><h2>Sector Performance &amp; Rotation Read</h2><span class="tag">Weekly % Performance</span></div>
+    <table class="t-heatmap">
+      <thead><tr><th>Sector Index</th><th class="num">Close Level</th><th class="num">Weekly % Chg</th><th>Sector Rotation Status</th></tr></thead>
+      <tbody id="heatmapTable"></tbody>
+    </table>
+  </section>
+
+</main>
+
+<footer class="page-footer">
+  <span>Portfolio Engagement &amp; Executive Research Desk</span>
+  <span>Internal Use Only · Confidential Executive Briefing (Page 1 of 2)</span>
+</footer>
+
+</div>
+</div>
+
+<!-- ===== PAGE 2 CONTENT ===== -->
+<div id="page2Section" class="pdf-page">
+<div class="page-inner">
+
+<header class="masthead">
+  <div class="masthead-brand">
+    <img src="raru_logo.png" alt="Raru Logo" class="masthead-logo">
+    <div class="masthead-left">
+      <div class="eyebrow">Institutional Capital, Corporate Filings &amp; Economic Calendar</div>
+      <h1>Executive Weekly Market Dashboard</h1>
+    </div>
+  </div>
+  <div class="masthead-right">
+    <span class="stamp">Last Updated: 17 Aug 2026, 02:46 PM</span><br>
+    Executive Briefing Report (Page 2 of 2)
+  </div>
+</header>
+
+<!-- Live Benchmark Spot Price Strip (Visible in PDF & Web) -->
+<div class="spot-strip-bar">
+  <div class="spot-strip-badge"><span class="spot-dot"></span> LIVE SPOT BENCHMARKS</div>
+  <div class="spot-items-wrapper" id="spotStripPage2"></div>
+</div>
+
+<main id="dashboardContentPage2">
+
+  <!-- FII vs DII Capital Flows with Direct Value Labels in ₹ Cr -->
+  <section class="panel span-7">
+    <div class="panel-head"><h2>FII vs DII Capital Flows</h2><span class="tag">Net Flow (₹ Cr) — Session Series</span></div>
+    <div class="chart-box"><canvas id="fiiDiiChart"></canvas></div>
+    <div class="mtd-flows-badge">
+      <span>MTD Net Flows:</span>
+      <span>FII: <span class="flow-val up">₹4,115.93 Cr</span> &nbsp;|&nbsp; DII: <span class="flow-val up">₹17,053.00 Cr</span></span>
+    </div>
+  </section>
+
+  <!-- Market Valuation -->
+  <section class="panel span-5">
+    <div class="panel-head"><h2>Sector / Index Valuation</h2><span class="tag">Trailing P/E · P/B</span></div>
+    <table class="t-val">
+      <thead><tr><th>Segment</th><th class="num">P/E</th><th class="num">P/B</th><th>Status</th></tr></thead>
+      <tbody id="valuationTable"></tbody>
+    </table>
+    <div class="note" id="valuationNote"></div>
+  </section>
+
+  <!-- Bulk deals -->
+  <section class="panel span-6">
+    <div class="panel-head"><h2>Institutional Bulk / Block Deals</h2><span class="tag">High-Value Trades</span></div>
+    <table class="t-bulk">
+      <thead><tr><th>Company</th><th>Client / Institution</th><th>Type</th><th class="num">Value</th></tr></thead>
+      <tbody id="bulkDealsTable"></tbody>
+    </table>
+  </section>
+
+  <!-- IPOs -->
+  <section class="panel span-6">
+    <div class="panel-head"><h2>Upcoming IPO Pipeline</h2><span class="tag">Mainboard &amp; SME</span></div>
+    <table class="t-ipo">
+      <thead><tr><th>Company</th><th>Category</th><th>Dates</th><th class="num">Price Band</th></tr></thead>
+      <tbody id="ipoTable"></tbody>
+    </table>
+  </section>
+
+  <!-- NEW SECTION: Upcoming Economic Calendar & Market Events -->
+  <section class="panel span-12">
+    <div class="panel-head"><h2>Upcoming Economic Calendar &amp; Macro Events (Next Week)</h2><span class="tag">ScanX Insights · High Impact</span></div>
+    <table class="t-econ">
+      <thead><tr><th>Date &amp; Time</th><th>Country</th><th>Economic Event / Announcement</th><th>Prior Data / Consensus</th><th>Market Impact Read</th></tr></thead>
+      <tbody id="economicTable"></tbody>
+    </table>
+  </section>
+
+</main>
+
+<footer class="page-footer">
+  <span>Portfolio Engagement &amp; Executive Research Desk</span>
+  <span>Internal Use Only · Confidential Executive Briefing (Page 2 of 2)</span>
+</footer>
+
+</div>
+</div>
+
+</div>
+
+<script>
+const fmt2 = n => (Object.is(n, -0) ? 0 : n).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+const fmt0 = n => n.toLocaleString('en-IN');
+// Signed display that never renders "+-0.00" / "-0.00" for flat values
+const norm = n => (Math.abs(n) < 0.005 ? 0 : n);
+const signed = (n, suffix) => { const v = norm(n); return (v > 0 ? '+' : '') + fmt2(v) + (suffix || ''); };
+const dirCls = n => { const v = norm(n); return v > 0 ? 'up' : (v < 0 ? 'down' : ''); };
+
+// ---------- Inject Data ----------
+const indices = [{"name": "NIFTY 50", "close": 24329.85, "pts": -36.15, "pct": -0.15, "high": 24630.4, "low": 24226.95}, {"name": "NIFTY BANK", "close": 57585.95, "pts": 94.85, "pct": 0.16, "high": 58015.85, "low": 57119.6}, {"name": "NIFTY FIN SERVICE", "close": 26261.4, "pts": 47.75, "pct": 0.18, "high": 26299.05, "low": 26051.75}, {"name": "SENSEX", "close": 77794.1, "pts": -215.15, "pct": -0.28, "high": 78757.4, "low": 77453.75}];
+const fiiDii = [{"date": "07 Aug", "fii": 480.24, "dii": 235.56}, {"date": "10 Aug", "fii": 1974.76, "dii": -1290.29}, {"date": "11 Aug", "fii": 258.55, "dii": 24.77}, {"date": "12 Aug", "fii": -1002.5, "dii": 5841.66}, {"date": "13 Aug", "fii": -510.69, "dii": 4353.09}, {"date": "14 Aug", "fii": 508.12, "dii": 356.4}];
+const valuation = [{"seg": "Nifty 50", "pe": 20.56, "pb": 2.97, "status": "Fairly Valued", "cls": "fair", "note": "Trading near historical 5-yr average; supportive for allocation."}, {"seg": "Nifty 500", "pe": 22.94, "pb": 3.32, "status": "Neutral", "cls": "neutral", "note": "Broader market valuations holding stable despite minor price corrections."}, {"seg": "Nifty Bank", "pe": 13.6, "pb": 1.72, "status": "Undervalued", "cls": "undervalued", "note": "Attractive valuation support relative to broader sector indices."}, {"seg": "Nifty IT", "pe": 20.0, "pb": 5.52, "status": "Slightly Elevated", "cls": "elevated", "note": "Premium valuation driven by defensive rotation and earnings beats."}];
+const bulkDeals = [{"co": "STYLEBAAZA", "client": "NSE BL Session", "type": "BLOCK DEAL", "value": "\u20b9162.90 Cr"}, {"co": "Zepto (Pre-IPO / Secondary)", "client": "Motilal Oswal / Norges Bank", "type": "BUY", "value": "High Institutional Interest"}, {"co": "IIFL Securities", "client": "Error Account Adjustment", "type": "BUY / SELL", "value": "~\u20b98.50 Cr"}];
+const ipos = [{"co": "Horizon Industrial Parks", "cat": "Mainboard", "dates": "17 Aug \u2013 19 Aug 2026", "band": "\u20b957 \u2013 \u20b960"}, {"co": "ENS Enterprises", "cat": "BSE SME", "dates": "14 Aug \u2013 18 Aug 2026", "band": "\u20b987 \u2013 \u20b992"}];
+const macro = {"vix": {"val": 11.35, "chg": 0.03, "status": "India VIX"}, "usdinr": {"val": 95.61, "chg": 0.21, "status": "USD/INR"}, "crude": {"val": 89.21, "chg": 0.69, "status": "Brent Crude"}, "gold": {"val": 157430, "chg": 2580, "unit": "\u20b9/10g", "status": "MCX Proxy"}, "silver": {"val": 232100, "chg": 2400, "unit": "\u20b9/kg", "status": "MCX Proxy"}, "us10y": {"val": 4.7, "chg": 0.06, "status": "US 10Y Yield"}};
+const heatmap = [{"name": "Nifty Bank", "close": 57628.45, "pct": -0.2, "trend": "Underperforming"}, {"name": "Nifty IT", "close": 30863.25, "pct": -2.17, "trend": "Underperforming"}, {"name": "Nifty Auto", "close": 29239.85, "pct": 0.0, "trend": "Neutral"}, {"name": "Nifty Pharma", "close": 26401.5, "pct": -0.53, "trend": "Underperforming"}, {"name": "Nifty FMCG", "close": 48245.45, "pct": 0.0, "trend": "Neutral"}, {"name": "Nifty Realty", "close": 908.85, "pct": 0.0, "trend": "Neutral"}, {"name": "Nifty Metal", "close": 13114.2, "pct": -0.0, "trend": "Neutral"}, {"name": "Nifty Energy", "close": 38667.95, "pct": 0.0, "trend": "Neutral"}];
+const takeaways = ["MARKET & COMMODITIES: Nifty 50 at 24,329.85 (-36.15 pts). MCX Gold trades at \u20b9157,430/10g, MCX Silver at \u20b9232,100/kg.", "INSTITUTIONAL CAPITAL: DII Net Absorption at +\u20b917,053.00 Cr, continuing to buffer market liquidity against net FII outflows.", "SECTOR DYNAMICS: Sector strength led by Defensive IT & Pharma while Banking & Metals undergo healthy short-term consolidation."];
+const topNews = {"macro": [{"headline": "US Fed Signals Data-Dependent Rate Outlook", "source": "Global Macro", "tag": "POLICY", "date": "14 Aug 2026", "impact": "Global bond yields ease as market prices in potential September rate cuts."}, {"headline": "Brent Crude Oil Consolidates Under $80/bbl", "source": "Energy Desk", "tag": "CRUDE", "date": "13 Aug 2026", "impact": "Softening crude prices provide a supportive inflation backdrop for Asian net importers."}], "india": [{"headline": "RBI Holds Repo Rate Neutral at 6.50%; Retains GDP Forecast at 7.2%", "source": "RBI / Domestic", "tag": "RBI", "date": "14 Aug 2026", "impact": "Central bank maintains focus on durable disinflation while supporting growth."}, {"headline": "India Retail Inflation Drops to 3.54% 5-Month Low", "source": "MOSPI Data", "tag": "CPI", "date": "13 Aug 2026", "impact": "Favorable food base effects pull CPI comfortably below RBI 4% target threshold."}]};
+const economicEvents = [{"date": "Mon 17 Aug, 02:30 PM", "event": "India Trade Balance (Jul)", "country": "IN", "prior": "$-30.43B", "impact": "Key macro read for Current Account Deficit & INR stability."}, {"date": "Mon 17 Aug, 04:00 PM", "event": "India Unemployment Rate (Jul)", "country": "IN", "prior": "5.5%", "impact": "Monitors domestic labor force momentum and macro consumption."}, {"date": "Thu 20 Aug, 05:00 PM", "event": "India Infrastructure Output YoY (Jul)", "country": "IN", "prior": "5.0%", "impact": "Core gauge for cement, steel, power & industrial capex."}, {"date": "Fri 21 Aug, 10:30 AM", "event": "HSBC Manufacturing & Services PMI Flash", "country": "IN", "prior": "58.1 / 60.3", "impact": "Forward-looking high frequency indicator for corporate expansion."}, {"date": "Fri 21 Aug, 05:00 PM", "event": "India Forex Reserves & Bank Credit Growth", "country": "IN", "prior": "$707 Billion", "impact": "Reflects banking system liquidity & RBI import cover."}];
+
+// ---------- Precision Aligned PDF Export Handler ----------
+// Uses the browser print pipeline so the on-screen export matches the
+// pipeline-generated PDF exactly (same @page box, same auto-fit scale).
+// Choose "Save as PDF", A3 landscape, and enable Background graphics.
+function exportPDF() {
+  window.print();
+}
+
+// ---------- Executive Takeaways ----------
+document.getElementById('takeawaysList').innerHTML = takeaways.map(t => `<li>${t}</li>`).join('');
+
+// ---------- Macro & MCX Card Grid (6 Cards) ----------
+document.getElementById('macroGrid').innerHTML = `
+  <div class="macro-card">
+    <div class="m-lbl">MCX Gold (10g)</div>
+    <div class="m-val">₹${macro.gold.val.toLocaleString('en-IN')}</div>
+    <div class="m-sub ${macro.gold.chg>=0?'up':'down'}">${macro.gold.chg>0?'+':''}${macro.gold.chg} (${macro.gold.status})</div>
+  </div>
+  <div class="macro-card">
+    <div class="m-lbl">MCX Silver (1kg)</div>
+    <div class="m-val">₹${macro.silver.val.toLocaleString('en-IN')}</div>
+    <div class="m-sub ${macro.silver.chg>=0?'up':'down'}">${macro.silver.chg>0?'+':''}${macro.silver.chg} (${macro.silver.status})</div>
+  </div>
+  <div class="macro-card">
+    <div class="m-lbl">USD / INR Rate</div>
+    <div class="m-val">₹${macro.usdinr.val}</div>
+    <div class="m-sub ${macro.usdinr.chg<=0?'up':'down'}">${macro.usdinr.chg>0?'+':''}${macro.usdinr.chg} (${macro.usdinr.status})</div>
+  </div>
+  <div class="macro-card">
+    <div class="m-lbl">Brent Crude ($/bbl)</div>
+    <div class="m-val">$${macro.crude.val}</div>
+    <div class="m-sub ${macro.crude.chg<=0?'up':'down'}">${macro.crude.chg>0?'+':''}${macro.crude.chg} (${macro.crude.status})</div>
+  </div>
+  <div class="macro-card">
+    <div class="m-lbl">India VIX</div>
+    <div class="m-val">${macro.vix.val}</div>
+    <div class="m-sub ${macro.vix.chg<=0?'up':'down'}">${macro.vix.chg>0?'+':''}${macro.vix.chg} (${macro.vix.status})</div>
+  </div>
+  <div class="macro-card">
+    <div class="m-lbl">US 10Y Yield</div>
+    <div class="m-val">${macro.us10y.val}%</div>
+    <div class="m-sub ${macro.us10y.chg<=0?'up':'down'}">${macro.us10y.chg>0?'+':''}${macro.us10y.chg}% (${macro.us10y.status})</div>
+  </div>
+`;
+
+// ---------- Top News Digest ----------
+document.getElementById('macroNewsContainer').innerHTML = topNews.macro.map(n => `
+  <div class="news-card">
+    <div class="n-header"><span>${n.source}</span><span>${n.date}</span></div>
+    <div class="n-title">${n.headline}</div>
+    <div class="n-impact">${n.impact}</div>
+  </div>
+`).join('');
+
+document.getElementById('indiaNewsContainer').innerHTML = topNews.india.map(n => `
+  <div class="news-card">
+    <div class="n-header"><span>${n.source}</span><span>${n.date}</span></div>
+    <div class="n-title">${n.headline}</div>
+    <div class="n-impact">${n.impact}</div>
+  </div>
+`).join('');
+
+// ---------- Spot Strip Builder (Print & Web) ----------
+function populateSpotStrips() {
+  const findIdx = (k) => indices.find(x => x.name.toUpperCase().includes(k)) || {name: k, close: 0, pts: 0, pct: 0};
+  const n50 = findIdx('50');
+  const snx = findIdx('SENSEX');
+  const bnf = findIdx('BANK');
+  const fin = findIdx('FIN');
+
+  const makeItem = (label, d) => {
+    const isUp = d.pct >= 0;
+    const arrow = isUp ? '▲' : '▼';
+    const sign = isUp ? '+' : '';
+    const cls = isUp ? 'up' : 'down';
+    return `
+      <div class="spot-item">
+        <span class="spot-name">${label}</span>
+        <span class="spot-val">${fmt2(d.close)}</span>
+        <span class="spot-chg ${cls}">${arrow} ${sign}${fmt2(d.pts)} (${sign}${fmt2(d.pct)}%)</span>
+      </div>
+    `;
+  };
+
+  const content = `
+    ${makeItem('NIFTY 50 SPOT', n50)}
+    <div class="spot-divider"></div>
+    ${makeItem('SENSEX SPOT', snx)}
+    <div class="spot-divider"></div>
+    ${makeItem('BANK NIFTY SPOT', bnf)}
+    <div class="spot-divider"></div>
+    ${makeItem('FIN NIFTY SPOT', fin)}
+  `;
+
+  const s1 = document.getElementById('spotStripPage1');
+  const s2 = document.getElementById('spotStripPage2');
+  if (s1) s1.innerHTML = content;
+  if (s2) s2.innerHTML = content;
+}
+populateSpotStrips();
+
+// ---------- Ticker ----------
+const track = document.getElementById('tickerTrack');
+function buildTicker(){
+  let html = '';
+  for(let r=0; r<2; r++){
+    indices.forEach(ix=>{
+      const up = ix.pct >= 0;
+      html += `<span class="ticker-item">
+        <span class="name">${ix.name}</span>
+        <span class="close">${fmt2(ix.close)}</span>
+        <span class="chg ${up?'up':'down'}">${up?'▲':'▼'} ${fmt2(Math.abs(ix.pts))} (${fmt2(Math.abs(ix.pct))}%)</span>
+      </span>`;
+    });
+  }
+  if (track) track.innerHTML = html;
+}
+buildTicker();
+
+// ---------- Index table ----------
+document.getElementById('indexTable').innerHTML = indices.map(ix => `
+  <tr>
+    <td class="company">${ix.name}</td>
+    <td class="num mono">${fmt2(ix.close)}</td>
+    <td class="num mono ${dirCls(ix.pts)}">${signed(ix.pts)}</td>
+    <td class="num mono ${dirCls(ix.pct)}">${signed(ix.pct, '%')}</td>
+    <td class="num mono">${fmt2(ix.high)}</td>
+    <td class="num mono">${fmt2(ix.low)}</td>
+  </tr>
+`).join('');
+
+// ---------- Sector Heatmap ----------
+document.getElementById('heatmapTable').innerHTML = heatmap.map(h => `
+  <tr>
+    <td class="company">${h.name}</td>
+    <td class="num mono">${fmt2(h.close)}</td>
+    <td class="num mono ${dirCls(h.pct)}">${signed(h.pct, '%')}</td>
+    <td><span class="pill ${h.trend.toLowerCase()}">${h.trend}</span></td>
+  </tr>
+`).join('');
+
+// ---------- Valuation table ----------
+document.getElementById('valuationTable').innerHTML = valuation.map(v => `
+  <tr>
+    <td class="company">${v.seg}</td>
+    <td class="num mono">${fmt2(v.pe)}</td>
+    <td class="num mono">${fmt2(v.pb)}</td>
+    <td><span class="pill ${v.cls}">${v.status}</span></td>
+  </tr>
+`).join('');
+document.getElementById('valuationNote').innerHTML = valuation.map(v=>`<strong style="color:var(--text)">${v.seg}:</strong> ${v.note}`).join('<br><br>');
+
+// ---------- Bulk deals ----------
+document.getElementById('bulkDealsTable').innerHTML = bulkDeals.map(d => `
+  <tr>
+    <td class="company">${d.co}</td>
+    <td>${d.client}</td>
+    <td><span class="pill ${d.type.includes('SELL')?'bearish':'bullish'}">${d.type}</span></td>
+    <td class="num mono">${d.value}</td>
+  </tr>
+`).join('');
+
+// ---------- IPOs ----------
+document.getElementById('ipoTable').innerHTML = ipos.map(i => `
+  <tr>
+    <td class="company">${i.co}</td>
+    <td>${i.cat}</td>
+    <td class="mono" style="font-size:10px;">${i.dates}</td>
+    <td class="num mono">${i.band}</td>
+  </tr>
+`).join('');
+
+// ---------- Economic Calendar Table ----------
+document.getElementById('economicTable').innerHTML = economicEvents.map(e => `
+  <tr>
+    <td class="mono" style="font-weight:600; font-size:10.5px;">${e.date}</td>
+    <td class="mono" style="font-size:10px;"><span class="pill neutral">${e.country}</span></td>
+    <td class="company">${e.event}</td>
+    <td class="mono" style="font-size:10.5px;">${e.prior}</td>
+    <td style="color:var(--text-dim); font-size:11px;">${e.impact}</td>
+  </tr>
+`).join('');
+
+// ---------- Charts ----------
+Chart.defaults.font.family = "'IBM Plex Mono', monospace";
+Chart.defaults.font.size = 9.5;
+Chart.defaults.color = '#475569';
+
+if (typeof ChartDataLabels !== 'undefined') {
+  Chart.register(ChartDataLabels);
+}
+
+window.fiiDiiChartInstance = new Chart(document.getElementById('fiiDiiChart'), {
+  type:'bar',
+  data:{
+    labels: fiiDii.map(d=>d.date),
+    datasets:[
+      {label:'FII Net', data:fiiDii.map(d=>d.fii), backgroundColor:'#B45309', borderRadius:2, maxBarThickness:15},
+      {label:'DII Net', data:fiiDii.map(d=>d.dii), backgroundColor:'#15803D', borderRadius:2, maxBarThickness:15},
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false, animation:false,
+    layout:{ padding:{ top:14, right:6 } },
+    plugins:{
+      legend:{ position:'top', align:'end', labels:{boxWidth:8, boxHeight:8, color:'#475569'} },
+      datalabels: {
+        anchor: 'end',
+        align: 'top',
+        color: '#0F172A',
+        font: { size: 8, weight: 'bold', family: "'IBM Plex Mono', monospace" },
+        formatter: (val) => (val !== 0 ? (val > 0 ? '+' : '') + Math.round(val) + ' Cr' : '')
+      }
+    },
+    scales:{
+      x:{ grid:{ color:'#E2E8F0' }, ticks:{ color:'#64748B' } },
+      y:{ grid:{ color:'#E2E8F0' }, ticks:{ color:'#64748B', callback:v=>'₹'+v } }
+    }
+  }
+});
+
+// ---------- Print / PDF Auto-Fit ----------
+// Measures each physical page box, then applies ONE uniform scale so both
+// pages share identical typography, sit flush inside the printable area and
+// never spill onto an extra page.
+window.preparePdfLayout = function(){
+  const pages = Array.from(document.querySelectorAll('.pdf-page'));
+  if (!pages.length) return 1;
+
+  const MAX_ROW_PAD = 3;    // px added per side to each table row
+  const MAX_EXTRA_GAP = 24; // px added to the gap between panel rows
+
+  if (window.fiiDiiChartInstance) window.fiiDiiChartInstance.resize();
+
+  // --- Pass 1: reset any previous fit and measure each page box ---
+  const measured = pages.map(pg => {
+    const inner = pg.querySelector('.page-inner');
+    const main = pg.querySelector('main');
+    inner.style.transform = 'none';
+    if (main) main.style.rowGap = '';
+    pg.querySelectorAll('tbody td').forEach(td => { td.style.paddingTop = ''; td.style.paddingBottom = ''; });
+    const cs = getComputedStyle(pg);
+    const avail = pg.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    return { pg, inner, main, avail, height: inner.getBoundingClientRect().height };
+  });
+
+  // --- Pass 2: one uniform scale, so both pages keep identical typography ---
+  let scale = 1;
+  measured.forEach(m => { if (m.height > m.avail) scale = Math.min(scale, m.avail / m.height); });
+  scale = Math.max(scale, 0.55);   // safety floor; below this text stops being legible
+  measured.forEach(m => { m.inner.style.transform = scale < 1 ? 'scale(' + scale + ')' : 'none'; });
+
+  // --- Pass 3: absorb leftover height evenly (table rows first, then panel gaps) ---
+  measured.forEach(m => {
+    let slack = (m.avail / scale) - m.height;
+    if (slack < 8 || !m.main) return;
+
+    const cells = m.pg.querySelectorAll('tbody td');
+    const rows = m.pg.querySelectorAll('tbody tr').length;
+    if (rows) {
+      const pad = Math.min(MAX_ROW_PAD, Math.floor(slack / (2 * rows)));
+      if (pad > 0) {
+        const base = parseFloat(getComputedStyle(cells[0]).paddingTop) || 0;
+        cells.forEach(td => {
+          td.style.paddingTop = (base + pad) + 'px';
+          td.style.paddingBottom = (base + pad) + 'px';
+        });
+        slack -= pad * 2 * rows;
+      }
+    }
+
+    const panelRows = new Set(Array.from(m.main.children).map(c => Math.round(c.offsetTop))).size;
+    if (panelRows > 1 && slack > 0) {
+      const base = parseFloat(getComputedStyle(m.main).rowGap) || 0;
+      m.main.style.rowGap = (base + Math.min(MAX_EXTRA_GAP, slack / (panelRows - 1))) + 'px';
+    }
+  });
+
+  if (window.fiiDiiChartInstance) window.fiiDiiChartInstance.resize();
+  return scale;
+};
+
+window.addEventListener('beforeprint', () => { try { window.preparePdfLayout(); } catch(e) {} });
+</script>
+
+</body>
+</html>

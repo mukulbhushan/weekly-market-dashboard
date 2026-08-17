@@ -1,0 +1,38 @@
+{
+  "allIndices": {
+    "status": 200,
+    "sample": "{'data': [{'key': 'INDICES ELIGIBLE IN DERIVATIVES', 'index': 'NIFTY 50', 'indexSymbol': 'NIFTY 50', 'last': 24366, 'variation': -29.85, 'percentChange': -0.12, 'open': 24361.9, 'high': 24405.2, 'low'"
+  },
+  "fiidii": {
+    "status": 200,
+    "sample": "[{'buyValue': '16565.14', 'category': 'DII', 'date': '13-Aug-2026', 'netValue': '4353.09', 'sellValue': '12212.05'}, {'buyValue': '14492.46', 'category': 'FII/FPI', 'date': '13-Aug-2026', 'netValue': "
+  },
+  "block_deals": {
+    "status": 200,
+    "sample": "{'timestamp': '-', 'data': [], 'totalTradedValue': 0, 'totalTradedVolume': 0, 'Session 2': {'advances': 0, 'declines': 0, 'unchanged': 0}, 'Session 1': {'advances': 0, 'declines': 0, 'unchanged': 0}, "
+  },
+  "bulk_deals": {
+    "status": 404,
+    "sample": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Resource not found</title>"
+  },
+  "corporate_announcements": {
+    "status": 200,
+    "sample": "[{'an_dt': '14-Aug-2026 16:18:50', 'attFileSize': '472.43 KB', 'attchmntFile': 'https://nsearchives.nseindia.com/corporate/SMARTWORKS_14082026160251_Intimation_for_ESOP_Allotment.pdf', 'attchmntText':"
+  },
+  "event_calendar": {
+    "status": 200,
+    "sample": "[{'symbol': 'ATALREAL', 'company': 'Atal Realtech Limited', 'purpose': 'Fund Raising/Other business matters', 'bm_desc': 'To consider Fund Raising and other business matters', 'date': '17-Aug-2026'}, "
+  },
+  "top_gainers": {
+    "status": 200,
+    "sample": "{'legends': [['NIFTY', 'NIFTY 50'], ['BANKNIFTY', 'BANK NIFTY'], ['NIFTYNEXT50', 'NIFTY NEXT 50'], ['SecGtr20', 'Securities > Rs 20'], ['SecLwr20', 'Securities < Rs 20'], ['FOSec', 'F&O Securities'], "
+  },
+  "top_losers": {
+    "status": 200,
+    "sample": "{'data': 'Missing index or key.'}"
+  },
+  "equity_master": {
+    "status": 200,
+    "sample": "{'Indices Eligible In Derivatives': ['NIFTY 50', 'NIFTY BANK', 'NIFTY FINANCIAL SERVICES', 'NIFTY INDIA FPI 150', 'NIFTY MIDCAP SELECT', 'NIFTY NEXT 50'], 'Broad Market Indices': ['NIFTY 100', 'NIFTY "
+  }
+}

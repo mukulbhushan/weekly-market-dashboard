@@ -1,0 +1,78 @@
+================ SHEET: Executive Dashboard & Index Ben (Rows: 5, Cols: 7) ================
+Row  1: ['Index Name', "Today's Close", 'Points Change', '% Change', 'Weekly High', 'Weekly Low', 'Trend']
+Row  2: ['INDEXNSE:NIFTY_50', 24366, -29.85, -0.0012, 24677.05, 24265.95, 'Bearish']
+Row  3: ['INDEXNSE:NIFTY_BANK', 57491.1, -144.15, -0.0025, 58076.85, 57158.1, 'Bearish']
+Row  4: ['INDEXNSE:NIFTY_FIN_SERVICE', 26213.65, -114.3, -0.0043, 26312.9, 26174.95, 'Bearish']
+Row  5: ['INDEXBOM:SENSEX', 78009.25, -70.71, -0.0009, 78954.76, 77497.93, 'Bearish']
+
+================ SHEET: Market Breadth & Valuation Metr (Rows: 4, Cols: 6) ================
+Row  1: ['Metric', 'Nifty 50 Count', 'Nifty 500 Count', 'Index Valuation', "Today's Value", 'Historical 30D Avg']
+Row  2: ['Advancing Stocks (Gainers)', 10, 167, 'Nifty 50 P/E', 20.59, 21.1]
+Row  3: ['Declining Stocks (Losers)', 39, 330, 'Nifty 500 P/E', 23.01, 23.25]
+Row  4: ['Advance / Decline Ratio', 0.2564, 0.5061, 'Market Sentiment', 'Bearish', 'Neutral']
+
+================ SHEET: FII VS DII DATA (Rows: 10, Cols: 8) ================
+Row  1: ['Date', 'FII Buy (₹ Cr)', 'FII Sell (₹ Cr)', 'FII Net (₹ Cr)', 'DII Buy (₹ Cr)', 'DII Sell (₹ Cr)', 'DII Net (₹ Cr)', 'Net Institutional Flow']
+Row  2: [datetime.datetime(2026, 8, 13, 0, 0), 14492.46, 15003.15, -510.69, 16565.14, 12212.05, 4353.09, 3842.4]
+Row  3: [datetime.datetime(2026, 8, 12, 0, 0), 16584.64, 17587.14, -1002.5, 21518.55, 15676.89, None, None]
+Row  4: [datetime.datetime(2026, 8, 11, 0, 0), 14628.47, 14369.92, None, 15006.72, 14981.95, None, None]
+Row  5: [datetime.datetime(2026, 8, 10, 0, 0), 13161.56, 11186.8, None, 15868.51, 17158.8, -1290.29, None]
+Row  6: [datetime.datetime(2026, 8, 7, 0, 0), 12941.31, 12461.07, None, 15679.58, 15444.02, None, None]
+Row  7: [datetime.datetime(2026, 8, 6, 0, 0), 16161.35, 16179.21, -17.86, 19723.68, 15710.08, None, None]
+Row  8: [datetime.datetime(2026, 8, 5, 0, 0), 15940.5, 16883.92, -943.42, 19353.43, 16470.26, None, None]
+Row  9: [datetime.datetime(2026, 8, 4, 0, 0), 15630.45, 13183.98, None, 15241.39, 16177.53, -936.14, None]
+Row 10: [datetime.datetime(2026, 8, 3, 0, 0), 12621.89, 11699.63, None, 18325.97, 16754.79, None, None]
+
+================ SHEET: MARKET VALUATION (Rows: 21, Cols: 6) ================
+Row  1: ['Index / Sector', 'Trailing P/E Ratio', 'Price-to-Book (P/B)', '30-Day Historical Avg P/E', 'Valuation Status', 'Key Weekly Observation']
+Row  2: ['Nifty 50', 20.59, 2.98, 21.1, 'Fairly Valued', 'Trading slightly below historical averages; supportive for long-term entry.']
+Row  3: ['Nifty 500', 23.01, 3.35, 23.25, 'Neutral', 'Broader market valuations maintaining stable levels despite minor price corrections.']
+Row  4: ['Nifty Bank', 13.64, 1.74, 15.2, 'Undervalued', 'Attractive valuation support relative to broader indices.']
+Row  5: ['Nifty IT', 20.07, 5.53, 28.5, 'Slightly Elevated', 'Premium valuation driven by defensive rotation and recent earnings beats.']
+Row 21: [None, None, None, None, None, 'GOOGLE FINANCE']
+
+================ SHEET: MAJOR BULK DEAL (Rows: 4, Cols: 8) ================
+Row  1: ['Date', 'Company Name', 'Client / Institutional Name', 'Deal Type', 'Exchange', 'Quantity (Shares)', 'Average Price (₹)', 'Total Deal Value']
+Row  2: [datetime.datetime(2026, 8, 12, 0, 0), 'KFin Technologies', 'Kotak Mahindra Bank Limited', 'SELL', 'BSE', 3470000, 600.28, '₹208.30 Cr']
+Row  3: [datetime.datetime(2026, 8, 12, 0, 0), 'Zepto (Pre-IPO / Secondary)', 'Motilal Oswal / Norges Bank', 'BUY', 'Off-Market', 'Confidential', 'Bulk Entry', 'High Institutional Interest']
+Row  4: [datetime.datetime(2026, 8, 11, 0, 0), 'IIFL Securities', 'Error Account Adjustment', 'BUY / SELL', 'BSE', '14,045 / 17,000', 500.17, '~₹8.50 Cr']
+
+================ SHEET: UPCOMING IPO (Rows: 4, Cols: 6) ================
+Row  1: ['Company Name', 'Exchange / Category', 'Scheduled Issue Dates', 'Price Range (₹)', 'Issue Size (₹ Cr)', 'Minimum Investment / Lot']
+Row  2: ['Horizon Industrial Parks', 'Mainboard', '17 Aug – 19 Aug 2026', '₹57 – ₹60', '₹2,600.00 Cr', '₹14,250']
+Row  3: ['ENS Enterprises', 'BSE SME', '14 Aug – 18 Aug 2026', '₹87 – ₹92', '₹33.14 Cr', '₹2,08,800']
+Row  4: ['Technocrats Plasma Systems', 'BSE SME', '14 Aug – 18 Aug 2026', '₹125 – ₹132', '₹60.98 Cr', '₹2,50,000']
+
+================ SHEET: High-Delivery Accumulation Stoc (Rows: 6, Cols: 4) ================
+Row  1: ['Company Name', 'Ticker', 'Delivery Percentage (%)', 'Signal / Remark']
+Row  2: ['APOLLOHOSP', 'APOLLOHOSP', 0, 'High Volume Accumulation']
+Row  3: ['BHARTIARTL', 'BHARTIARTL', 0, 'High Volume Accumulation']
+Row  4: ['ADANIPORTS', 'ADANIPORTS', 0, 'High Volume Accumulation']
+Row  5: ['ADANIENT', 'ADANIENT', 0, 'High Volume Accumulation']
+Row  6: ['ICICIBANK', 'ICICIBANK', 0, 'High Volume Accumulation']
+
+================ SHEET: Upcoming Board Meetings & Corpo (Rows: 7, Cols: 4) ================
+Row  2: ['Company Name', 'Event Type', 'Scheduled Date', 'Focus Area / Agenda']
+Row  3: ['Atal Realtech Limited', 'Fund Raising/Other business matters', datetime.datetime(2026, 8, 17, 0, 0), 'To consider Fund Raising and other business matters']
+Row  4: ['Capital Infra Trust', 'Fund Raising/Other business matters', datetime.datetime(2026, 8, 17, 0, 0), 'To consider Fund Raising and other business matters']
+Row  5: ['Fineotex Chemical Limited', 'Fund Raising/Other business matters', datetime.datetime(2026, 8, 17, 0, 0), 'To consider Fund Raising and other business matters']
+Row  6: ['INDO-MIM Limited', 'Financial Results/Other business matters', datetime.datetime(2026, 8, 17, 0, 0), 'To consider and approve the financial results for the period ended Jun 30, 2026 and other business matters']
+Row  7: ['Shree Ram Proteins Limited', 'Financial Results', datetime.datetime(2026, 8, 17, 0, 0), 'To consider and approve the financial results for the period ended Jun 30, 2026']
+
+================ SHEET: Significant Regulatory Announce (Rows: 6, Cols: 4) ================
+Row  1: ['Company Name', 'Ticker', 'Filing Date / Time', 'Subject / Key Disclosure']
+Row  2: ['EICHERMOT', 'EICHERMOT', '14-Aug-2026 16:20:05', 'Press Release: Eicher Motors Limited has informed the Exchange regarding a press release dated August 14, 2026, titled Royal Enfield brings new update']
+Row  3: ['SMARTWORKS', 'SMARTWORKS', '14-Aug-2026 16:18:50', 'Allotment of Securities: Smartworks Coworking Spaces Limited has informed the Exchange regarding allotment of 119000 securities pursuant to ESOP/ESPS']
+Row  4: ['OMFREIGHT', 'OMFREIGHT', '14-Aug-2026 16:18:05', 'Press Release: Press Release in connection with the Unaudited Standaloneand consolidated Financial Results for the quarter ended June 30, 2026.']
+Row  5: ['SATIA', 'SATIA', '14-Aug-2026 16:17:57', 'Press Release: Satia Industries Limited has informed the Exchange regarding a press release dated 0 , , titled "INR3618Mn".']
+Row  6: ['JUNIPER', 'JUNIPER', '14-Aug-2026 16:16:29', 'Press Release: Juniper Hotels Limited has informed the Exchange regarding a press release dated August 14, 2026, titled "Juniper Hotels Delivers Healt']
+
+================ SHEET: Corporate Earnings, Corporate A (Rows: 7, Cols: 5) ================
+Row  1: ['Company Name', 'Ticker', 'LTP (₹)', 'Day Change (%)', 'Result Highlights / Key Takeaway']
+Row  2: ['EICHERMOT', 'EICHERMOT', 491.95, -0.0941, 'Press Release']
+Row  3: ['OMFREIGHT', 'OMFREIGHT', 12.65, -0.0156, 'Press Release']
+Row  4: ['SATIA', 'SATIA', 31.83, -0.0499, 'Press Release']
+Row  5: ['JUNIPER', 'JUNIPER', 18.85, None, 'Press Release']
+Row  6: ['Siemens', 'SIEMENS', 4019, 0, 'Board Board Meeting / Quarterly Results.']
+Row  7: ['Astral', 'ASTRAL', 1464, 0, 'Board Board Meeting / Quarterly Results.']
+
