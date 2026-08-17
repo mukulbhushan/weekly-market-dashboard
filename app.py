@@ -6,6 +6,7 @@ import datetime
 import pandas as pd
 import openpyxl
 import streamlit.components.v1 as components
+from playwright.async_api import async_playwright
 import update_spreadsheet
 
 st.set_page_config(
@@ -21,18 +22,18 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Newsreader:wght@600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap');
     
     .stApp {
-        background-color: #FAFAFA;
+        background-color: #F8FAFC;
         font-family: 'Inter', sans-serif;
     }
     .mono { font-family: 'IBM Plex Mono', monospace; }
     
-    .spot-bar {
+    .spot-strip {
         background: #FFFFFF;
         border: 1px solid #CBD5E1;
         border-left: 5px solid #B45309;
         border-radius: 6px;
         padding: 10px 16px;
-        margin-bottom: 20px;
+        margin-bottom: 16px;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -53,8 +54,38 @@ st.markdown("""
         padding: 12px 16px;
         box-shadow: 0 1px 2px rgba(0,0,0,0.03);
     }
+    div[data-testid="stMetricValue"] {
+        font-family: 'IBM Plex Mono', monospace;
+        font-weight: 700;
+        font-size: 22px;
+    }
+    div[data-testid="stMetricDelta"] {
+        font-family: 'IBM Plex Mono', monospace;
+        font-weight: 600;
+        font-size: 13px;
+    }
 </style>
 """, unsafe_allow_html=True)
+
+# Helper to generate page preview images if needed
+async def ensure_preview_images():
+    if os.path.exists("weekly-market-dashboard.html"):
+        async with async_playwright() as p:
+            browser = None
+            for channel in ['msedge', 'chrome', None]:
+                try:
+                    if channel: browser = await p.chromium.launch(channel=channel, headless=True)
+                    else: browser = await p.chromium.launch(headless=True)
+                    break
+                except Exception: continue
+            if browser:
+                page = await browser.new_page(viewport={'width': 1920, 'height': 1200})
+                html_url = 'file:///' + os.path.abspath('weekly-market-dashboard.html').replace('\\', '/')
+                await page.goto(html_url, wait_until='networkidle')
+                await page.wait_for_timeout(800)
+                await page.locator('#page1Section').screenshot(path='page1_preview.png')
+                await page.locator('#page2Section').screenshot(path='page2_preview.png')
+                await browser.close()
 
 # Sidebar Actions & Controls
 with st.sidebar:
@@ -64,19 +95,18 @@ with st.sidebar:
     st.caption("Executive Research & Portfolio Desk")
     st.divider()
     
-    st.subheader("⚡ Pipeline Controls")
+    st.subheader("⚡ Live Operations")
     
     if st.button("🔄 Refresh Live Market Data", use_container_width=True, type="primary"):
-        with st.spinner("Executing live market scraping & updating spreadsheet..."):
+        with st.spinner("Fetching live market feeds, calculating MTD flows & updating spreadsheet..."):
             try:
                 asyncio.run(update_spreadsheet.main_pipeline())
-                st.success("✅ Dashboard & Excel updated successfully!")
+                asyncio.run(ensure_preview_images())
+                st.success("✅ Dashboard & Excel synchronized successfully!")
                 st.rerun()
             except Exception as e:
                 st.error(f"Execution Error: {e}")
 
-    st.divider()
-    
     # Locate latest PDF
     pdf_files = sorted(glob.glob("Weekly_Market_Dashboard_*.pdf"), reverse=True)
     latest_pdf = pdf_files[0] if pdf_files else None
@@ -85,14 +115,14 @@ with st.sidebar:
         with open(latest_pdf, "rb") as f:
             pdf_bytes = f.read()
         st.download_button(
-            label="📥 Download Executive 2-Page PDF",
+            label="📥 Download Executive PDF (2-Page)",
             data=pdf_bytes,
             file_name=os.path.basename(latest_pdf),
             mime="application/pdf",
             use_container_width=True
         )
-        st.caption(f"Latest PDF: `{os.path.basename(latest_pdf)}` ({len(pdf_bytes):,} bytes)")
-    
+        st.caption(f"Ready: `{os.path.basename(latest_pdf)}` ({len(pdf_bytes):,} bytes)")
+
     if os.path.exists("WEEKLY REPORT SPREADSHEET.xlsx"):
         with open("WEEKLY REPORT SPREADSHEET.xlsx", "rb") as f:
             excel_bytes = f.read()
@@ -121,7 +151,7 @@ with col_hdr2:
 
 st.write("")
 
-# Top Metric Strip (Nifty 50, Sensex, Bank Nifty, Fin Nifty, India VIX, USD/INR)
+# Top Metric Strip (Nifty 50, Sensex, Bank Nifty, Fin Nifty)
 try:
     wb = openpyxl.load_workbook("WEEKLY REPORT SPREADSHEET.xlsx", data_only=True)
     idx_sheet = wb["Executive Dashboard & Index Ben"]
@@ -158,22 +188,56 @@ st.write("")
 # Navigation Tabs
 tab1, tab2, tab3 = st.tabs([
     "🖥️ Interactive Executive Dashboard", 
-    "📊 Excel Data & Institutional Explorer",
-    "📄 PDF Report Preview & Download"
+    "📄 PDF Report Pages & Export",
+    "📊 Excel Data & Institutional Explorer"
 ])
 
 with tab1:
+    st.subheader("Interactive Market Briefing")
+    st.caption("Live interactive dashboard with interactive charts, sector rotation heatmap, and institutional flows.")
     if os.path.exists("weekly-market-dashboard.html"):
         with open("weekly-market-dashboard.html", "r", encoding="utf-8") as f:
             html_content = f.read()
-        components.html(html_content, height=1300, scrolling=True)
+        components.html(html_content, height=1400, scrolling=True)
     else:
         st.info("HTML Dashboard not found. Click 'Refresh Live Market Data' in the sidebar to generate it.")
 
 with tab2:
+    st.subheader("Investor 2-Page Print-Ready PDF")
+    st.caption("Inspected and verified 2-page landscape format designed for weekly investor dissemination.")
+    
+    col_pdf1, col_pdf2 = st.columns([1, 1])
+    
+    if latest_pdf and os.path.exists(latest_pdf):
+        with open(latest_pdf, "rb") as f:
+            pdf_bytes = f.read()
+        
+        st.download_button(
+            label="⬇️ Download Executive 2-Page PDF Document",
+            data=pdf_bytes,
+            file_name=os.path.basename(latest_pdf),
+            mime="application/pdf",
+            type="primary",
+            use_container_width=True
+        )
+    
+    st.write("")
+    
+    # Render preview images of Page 1 and Page 2
+    if os.path.exists("page1_preview.png") and os.path.exists("page2_preview.png"):
+        p_col1, p_col2 = st.columns(2)
+        with p_col1:
+            st.markdown("#### Page 1: Benchmark Summary & Sector Performance")
+            st.image("page1_preview.png", use_container_width=True)
+        with p_col2:
+            st.markdown("#### Page 2: Institutional Flows, Bulk Deals & Macro Events")
+            st.image("page2_preview.png", use_container_width=True)
+
+with tab3:
+    st.subheader("Underlying Excel Sheets Explorer")
     if os.path.exists("WEEKLY REPORT SPREADSHEET.xlsx"):
         wb = openpyxl.load_workbook("WEEKLY REPORT SPREADSHEET.xlsx", data_only=True)
-        sheet_choice = st.selectbox("Select Excel Sheet to Inspect:", wb.sheetnames)
+        sheet_choice = st.selectbox("Select Sheet to View:", wb.sheetnames)
         if sheet_choice:
             ws = wb[sheet_choice]
             data = list(ws.iter_rows(values_only=True))
@@ -184,21 +248,3 @@ with tab2:
                 st.dataframe(df, use_container_width=True)
     else:
         st.info("Spreadsheet not found. Please refresh live market data first.")
-
-with tab3:
-    st.subheader("📄 Executive 2-Page Print-Ready PDF")
-    if latest_pdf and os.path.exists(latest_pdf):
-        st.success(f"Generated PDF Document Available: **{os.path.basename(latest_pdf)}**")
-        with open(latest_pdf, "rb") as f:
-            pdf_bytes = f.read()
-        
-        st.download_button(
-            label="⬇️ Download 2-Page Executive PDF",
-            data=pdf_bytes,
-            file_name=os.path.basename(latest_pdf),
-            mime="application/pdf",
-            type="primary",
-            use_container_width=True
-        )
-    else:
-        st.info("Click 'Refresh Live Market Data' to generate the executive PDF.")

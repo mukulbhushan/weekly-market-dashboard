@@ -623,6 +623,12 @@ async def render_dashboard_pdf(html_file, pdf_file):
 def generate_html_dashboard(html_file, indices, adv50, dec50, adv500, dec500, pe50, pe500, fiiDii, valuation, bulkDeals, ipos, macro, heatmap, takeaways, topNews, economicEvents, mtdFii, mtdDii):
     last_updated_str = datetime.datetime.now().strftime("%d %b %Y, %I:%M %p")
 
+    logo_data_src = "raru_logo.png"
+    if os.path.exists("raru_logo.png"):
+        import base64
+        with open("raru_logo.png", "rb") as lf:
+            logo_data_src = f"data:image/png;base64,{base64.b64encode(lf.read()).decode('utf-8')}"
+
     json_indices = json.dumps(indices)
     json_fiiDii = json.dumps(fiiDii)
     json_valuation = json.dumps(valuation)
@@ -1246,7 +1252,7 @@ def generate_html_dashboard(html_file, indices, adv50, dec50, adv500, dec500, pe
 
 <header class="masthead">
   <div class="masthead-brand">
-    <img src="raru_logo.png" alt="Raru Logo" class="masthead-logo">
+    <img src=\"""" + logo_data_src + """\" alt="Raru Logo" class="masthead-logo">
     <div class="masthead-left">
       <div class="eyebrow">Portfolio &amp; Executive Research Desk</div>
       <h1>Executive Weekly Market Dashboard</h1>
@@ -1364,7 +1370,7 @@ def generate_html_dashboard(html_file, indices, adv50, dec50, adv500, dec500, pe
 
 <header class="masthead">
   <div class="masthead-brand">
-    <img src="raru_logo.png" alt="Raru Logo" class="masthead-logo">
+    <img src=\"""" + logo_data_src + """\" alt="Raru Logo" class="masthead-logo">
     <div class="masthead-left">
       <div class="eyebrow">Institutional Capital, Corporate Filings &amp; Economic Calendar</div>
       <h1>Executive Weekly Market Dashboard</h1>
