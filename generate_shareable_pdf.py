@@ -201,7 +201,7 @@ async def generate_a4_executive_pdf():
   .pdf-page {{
     width: 297mm;
     height: 210mm;
-    padding: 6mm 7mm 5mm;
+    padding: 4mm 7mm 4mm;
     box-sizing: border-box;
     position: relative;
     overflow: hidden;
@@ -217,8 +217,8 @@ async def generate_a4_executive_pdf():
   /* Header */
   header.masthead {{
     border-bottom: 2px solid var(--gold);
-    padding-bottom: 4px;
-    margin-bottom: 4px;
+    padding-bottom: 2.5px;
+    margin-bottom: 2.5px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -231,14 +231,14 @@ async def generate_a4_executive_pdf():
   }}
 
   .masthead-logo {{
-    height: 34px;
+    height: 32px;
     width: auto;
     object-fit: contain;
   }}
 
   .masthead-left .eyebrow {{
     font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
-    font-size: 9.5px;
+    font-size: 10.5px;
     letter-spacing: 0.14em;
     color: var(--gold);
     text-transform: uppercase;
@@ -249,7 +249,7 @@ async def generate_a4_executive_pdf():
   .masthead-left h1 {{
     font-family: 'Aptos Display', 'Aptos', 'Newsreader', sans-serif;
     font-weight: 700;
-    font-size: 22px;
+    font-size: 24px;
     color: var(--text);
     letter-spacing: 0.01em;
     line-height: 1.1;
@@ -258,7 +258,7 @@ async def generate_a4_executive_pdf():
   .masthead-right {{
     text-align: right;
     font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
-    font-size: 10px;
+    font-size: 11px;
     color: var(--text-dim);
     line-height: 1.35;
   }}
@@ -268,9 +268,9 @@ async def generate_a4_executive_pdf():
     border: 1px solid var(--gold);
     background: var(--gold-bg);
     color: var(--gold);
-    padding: 2px 7px;
+    padding: 2.5px 8px;
     border-radius: 3px;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.03em;
     margin-bottom: 2px;
@@ -286,13 +286,13 @@ async def generate_a4_executive_pdf():
     border-left: 4px solid var(--gold);
     border-radius: 4px;
     padding: 3px 8px;
-    margin-bottom: 4px;
+    margin-bottom: 3.5px;
     gap: 6px;
   }}
 
   .spot-tag {{
     font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
-    font-size: 9.5px;
+    font-size: 10px;
     font-weight: 700;
     color: var(--gold);
     letter-spacing: 0.08em;
@@ -304,14 +304,14 @@ async def generate_a4_executive_pdf():
     display: flex;
     align-items: center;
     gap: 4px;
-    font-size: 10px;
+    font-size: 11px;
     font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
     white-space: nowrap;
   }}
 
   .ticker-pill .t-name {{ font-weight: 700; color: var(--text); }}
   .ticker-pill .t-close {{ font-weight: 600; color: var(--text-dim); }}
-  .ticker-pill .t-chg {{ font-weight: 700; font-size: 9.5px; }}
+  .ticker-pill .t-chg {{ font-weight: 700; font-size: 10.5px; }}
 
   .up {{ color: var(--green); }}
   .down {{ color: var(--red); }}
@@ -324,12 +324,12 @@ async def generate_a4_executive_pdf():
     border-left: 4px solid var(--gold);
     border-radius: 4px;
     padding: 4px 8px;
-    margin-bottom: 4px;
+    margin-bottom: 3.5px;
   }}
 
   .takeaways-head {{
     font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
-    font-size: 9.5px;
+    font-size: 10.5px;
     letter-spacing: 0.08em;
     color: var(--gold);
     text-transform: uppercase;
@@ -348,9 +348,9 @@ async def generate_a4_executive_pdf():
   }}
 
   .takeaways-list li {{
-    font-size: 10.5px;
+    font-size: 11.5px;
     color: #78350F;
-    line-height: 1.25;
+    line-height: 1.3;
     position: relative;
     padding-left: 10px;
     font-weight: 500;
@@ -361,7 +361,7 @@ async def generate_a4_executive_pdf():
     position: absolute;
     left: 1px;
     color: var(--gold);
-    font-size: 11px;
+    font-size: 12px;
   }}
 
   /* Grid Layout */
@@ -397,13 +397,13 @@ async def generate_a4_executive_pdf():
   .panel-head h2 {{
     font-family: 'Aptos Display', 'Aptos', 'Newsreader', sans-serif;
     font-weight: 700;
-    font-size: 14px;
+    font-size: 15px;
     color: var(--text);
   }}
 
   .panel-head .tag {{
     font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
-    font-size: 8.5px;
+    font-size: 9.5px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--text-faint);
@@ -425,9 +425,9 @@ async def generate_a4_executive_pdf():
     font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
   }}
 
-  .macro-card .m-lbl {{ font-size: 8px; color: var(--gold); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; }}
-  .macro-card .m-val {{ font-size: 12.5px; font-weight: 700; color: var(--text); margin: 0; line-height: 1.2; }}
-  .macro-card .m-sub {{ font-size: 8.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+  .macro-card .m-lbl {{ font-size: 9px; color: var(--gold); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; }}
+  .macro-card .m-val {{ font-size: 14.5px; font-weight: 700; color: var(--text); margin: 0; line-height: 1.2; }}
+  .macro-card .m-sub {{ font-size: 10px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
 
   /* Tables */
   table {{ width: 100%; border-collapse: collapse; }}
@@ -435,36 +435,36 @@ async def generate_a4_executive_pdf():
   th {{
     text-align: left;
     font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
-    font-size: 9px;
+    font-size: 9.5px;
     letter-spacing: 0.04em;
     text-transform: uppercase;
     color: var(--text-faint);
     font-weight: 700;
-    padding: 2.5px 5px;
+    padding: 2px 5px;
     border-bottom: 1px solid var(--border);
     white-space: nowrap;
   }}
 
   td {{
-    padding: 2.5px 5px;
+    padding: 1.8px 5px;
     border-bottom: 1px solid #F1F5F9;
-    font-size: 10.5px;
+    font-size: 11.5px;
     color: var(--text);
     vertical-align: middle;
-    line-height: 1.25;
+    line-height: 1.22;
   }}
 
-  td.num, th.num {{ font-family: 'Aptos Mono', 'IBM Plex Mono', monospace; text-align: right; font-size: 10.5px; }}
+  td.num, th.num {{ font-family: 'Aptos Mono', 'IBM Plex Mono', monospace; text-align: right; font-size: 11.5px; }}
   tr:last-child td {{ border-bottom: none; }}
 
-  .company {{ font-weight: 700; color: var(--text); }}
-  .ticker-sub {{ color: var(--text-faint); font-size: 9.5px; font-family: 'Aptos Mono', 'IBM Plex Mono', monospace; }}
+  .company {{ font-weight: 700; color: var(--text); font-size: 11.5px; }}
+  .ticker-sub {{ color: var(--text-faint); font-size: 10px; font-family: 'Aptos Mono', 'IBM Plex Mono', monospace; }}
 
   /* Badges */
   .pill {{
     display: inline-block;
     font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
-    font-size: 9px;
+    font-size: 9.5px;
     font-weight: 700;
     letter-spacing: 0.02em;
     padding: 2px 6px;
@@ -484,7 +484,7 @@ async def generate_a4_executive_pdf():
   .news-grid {{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }}
   .news-col h3 {{
     font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
-    font-size: 9px;
+    font-size: 9.5px;
     letter-spacing: 0.06em;
     color: var(--gold);
     text-transform: uppercase;
@@ -503,19 +503,19 @@ async def generate_a4_executive_pdf():
   }}
 
   .news-card:last-child {{ margin-bottom: 0; }}
-  .news-card .n-header {{ display: flex; justify-content: space-between; font-size: 8.5px; color: var(--text-faint); font-family: 'Aptos Mono', 'IBM Plex Mono', monospace; margin-bottom: 1px; font-weight: 600; }}
-  .news-card .n-title {{ font-weight: 700; font-size: 10.5px; color: var(--text); margin-bottom: 1px; line-height: 1.25; }}
-  .news-card .n-impact {{ font-size: 9.5px; color: var(--text-dim); line-height: 1.25; }}
+  .news-card .n-header {{ display: flex; justify-content: space-between; font-size: 9px; color: var(--text-faint); font-family: 'Aptos Mono', 'IBM Plex Mono', monospace; margin-bottom: 1px; font-weight: 600; }}
+  .news-card .n-title {{ font-weight: 700; font-size: 11.5px; color: var(--text); margin-bottom: 1px; line-height: 1.25; }}
+  .news-card .n-impact {{ font-size: 10.5px; color: var(--text-dim); line-height: 1.25; }}
 
   /* Stat Row */
   .stat-row {{ display: flex; gap: 6px; margin-bottom: 2px; }}
   .stat {{ flex: 1; }}
-  .stat .label {{ font-family: 'Aptos Mono', 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: 0.03em; text-transform: uppercase; color: var(--text-faint); font-weight: 700; }}
-  .stat .value {{ font-family: 'Aptos Mono', 'IBM Plex Mono', monospace; font-size: 14.5px; font-weight: 700; }}
-  .stat .sub {{ font-size: 9.5px; color: var(--text-dim); margin-top: 1px; }}
+  .stat .label {{ font-family: 'Aptos Mono', 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.03em; text-transform: uppercase; color: var(--text-faint); font-weight: 700; }}
+  .stat .value {{ font-family: 'Aptos Mono', 'IBM Plex Mono', monospace; font-size: 16px; font-weight: 700; }}
+  .stat .sub {{ font-size: 10px; color: var(--text-dim); margin-top: 1px; }}
 
   .note {{
-    font-size: 9.5px;
+    font-size: 10px;
     color: var(--text-dim);
     line-height: 1.3;
     margin-top: 2px;
@@ -530,7 +530,7 @@ async def generate_a4_executive_pdf():
     border: 1px solid var(--border);
     border-radius: 3px;
     font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
-    font-size: 9.5px;
+    font-size: 10px;
     font-weight: 600;
     color: var(--text-dim);
     display: flex;
@@ -551,7 +551,7 @@ async def generate_a4_executive_pdf():
     padding-top: 3px;
     border-top: 1px solid var(--border);
     font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
-    font-size: 8.5px;
+    font-size: 9.5px;
     color: var(--text-faint);
     display: flex;
     justify-content: space-between;
