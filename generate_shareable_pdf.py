@@ -435,39 +435,39 @@ async def generate_a4_executive_pdf():
   th {{
     text-align: left;
     font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
-    font-size: 8.5px;
-    letter-spacing: 0.03em;
+    font-size: 9px;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
     color: var(--text-faint);
     font-weight: 700;
-    padding: 2px 5px;
+    padding: 2.5px 5px;
     border-bottom: 1px solid var(--border);
     white-space: nowrap;
   }}
 
   td {{
-    padding: 2px 5px;
+    padding: 2.5px 5px;
     border-bottom: 1px solid #F1F5F9;
-    font-size: 10px;
+    font-size: 10.5px;
     color: var(--text);
     vertical-align: middle;
-    line-height: 1.2;
+    line-height: 1.25;
   }}
 
-  td.num, th.num {{ font-family: 'Aptos Mono', 'IBM Plex Mono', monospace; text-align: right; }}
+  td.num, th.num {{ font-family: 'Aptos Mono', 'IBM Plex Mono', monospace; text-align: right; font-size: 10.5px; }}
   tr:last-child td {{ border-bottom: none; }}
 
-  .company {{ font-weight: 600; color: var(--text); }}
-  .ticker-sub {{ color: var(--text-faint); font-size: 9px; font-family: 'Aptos Mono', 'IBM Plex Mono', monospace; }}
+  .company {{ font-weight: 700; color: var(--text); }}
+  .ticker-sub {{ color: var(--text-faint); font-size: 9.5px; font-family: 'Aptos Mono', 'IBM Plex Mono', monospace; }}
 
   /* Badges */
   .pill {{
     display: inline-block;
     font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
-    font-size: 8.5px;
-    font-weight: 600;
+    font-size: 9px;
+    font-weight: 700;
     letter-spacing: 0.02em;
-    padding: 1.5px 5px;
+    padding: 2px 6px;
     border-radius: 3px;
     border: 1px solid;
     white-space: nowrap;
@@ -481,11 +481,11 @@ async def generate_a4_executive_pdf():
   .pill.fair {{ color: var(--blue); border-color: #BFDBFE; background: #EFF6FF; }}
 
   /* News Cards */
-  .news-grid {{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; }}
+  .news-grid {{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }}
   .news-col h3 {{
     font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
-    font-size: 8.5px;
-    letter-spacing: 0.05em;
+    font-size: 9px;
+    letter-spacing: 0.06em;
     color: var(--gold);
     text-transform: uppercase;
     margin-bottom: 2px;
@@ -497,27 +497,27 @@ async def generate_a4_executive_pdf():
   .news-card {{
     background: var(--panel-2);
     border: 1px solid var(--border);
-    padding: 2.5px 5px;
+    padding: 3px 6px;
     border-radius: 3px;
-    margin-bottom: 2px;
+    margin-bottom: 2.5px;
   }}
 
   .news-card:last-child {{ margin-bottom: 0; }}
   .news-card .n-header {{ display: flex; justify-content: space-between; font-size: 8.5px; color: var(--text-faint); font-family: 'Aptos Mono', 'IBM Plex Mono', monospace; margin-bottom: 1px; font-weight: 600; }}
-  .news-card .n-title {{ font-weight: 600; font-size: 10px; color: var(--text); margin-bottom: 1px; line-height: 1.2; }}
-  .news-card .n-impact {{ font-size: 9px; color: var(--text-dim); line-height: 1.2; }}
+  .news-card .n-title {{ font-weight: 700; font-size: 10.5px; color: var(--text); margin-bottom: 1px; line-height: 1.25; }}
+  .news-card .n-impact {{ font-size: 9.5px; color: var(--text-dim); line-height: 1.25; }}
 
   /* Stat Row */
   .stat-row {{ display: flex; gap: 6px; margin-bottom: 2px; }}
   .stat {{ flex: 1; }}
   .stat .label {{ font-family: 'Aptos Mono', 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: 0.03em; text-transform: uppercase; color: var(--text-faint); font-weight: 700; }}
-  .stat .value {{ font-family: 'Aptos Mono', 'IBM Plex Mono', monospace; font-size: 13.5px; font-weight: 700; }}
-  .stat .sub {{ font-size: 9px; color: var(--text-dim); margin-top: 1px; }}
+  .stat .value {{ font-family: 'Aptos Mono', 'IBM Plex Mono', monospace; font-size: 14.5px; font-weight: 700; }}
+  .stat .sub {{ font-size: 9.5px; color: var(--text-dim); margin-top: 1px; }}
 
   .note {{
-    font-size: 9px;
+    font-size: 9.5px;
     color: var(--text-dim);
-    line-height: 1.25;
+    line-height: 1.3;
     margin-top: 2px;
     padding-top: 2px;
     border-top: 1px dashed var(--border);
@@ -531,7 +531,7 @@ async def generate_a4_executive_pdf():
     border-radius: 3px;
     font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
     font-size: 9.5px;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--text-dim);
     display: flex;
     justify-content: space-between;
