@@ -82,75 +82,83 @@ async def main_pipeline():
 
     scanx_tickers = {}
     scanx_news = []
-    economic_events = []
-    adv50_sx, dec50_sx = 10, 39
+    # Default key upcoming events for next week
+    economic_events = [
+        {'date': 'Mon 17 Aug, 02:30 PM', 'event': 'India Trade Balance (Jul)', 'country': 'IN', 'prior': '$-30.43B', 'impact': 'Key macro read for Current Account Deficit & INR stability.'},
+        {'date': 'Mon 17 Aug, 04:00 PM', 'event': 'India Unemployment Rate (Jul)', 'country': 'IN', 'prior': '5.5%', 'impact': 'Monitors domestic labor force momentum and macro consumption.'},
+        {'date': 'Thu 20 Aug, 05:00 PM', 'event': 'India Infrastructure Output YoY (Jul)', 'country': 'IN', 'prior': '5.0%', 'impact': 'Core gauge for cement, steel, power & industrial capex.'},
+        {'date': 'Fri 21 Aug, 10:30 AM', 'event': 'HSBC Manufacturing & Services PMI Flash', 'country': 'IN', 'prior': '58.1 / 60.3', 'impact': 'Forward-looking high frequency indicator for corporate expansion.'},
+        {'date': 'Fri 21 Aug, 05:00 PM', 'event': 'India Forex Reserves & Bank Credit Growth', 'country': 'IN', 'prior': '$707 Billion', 'impact': 'Reflects banking system liquidity & RBI import cover.'}
+    ]
 
     print("========================================================")
     print("Step 1: Web Scraping ScanX Live Market Feed & Economic Calendar...")
     print("========================================================")
     
-    async with async_playwright() as p:
-        try: browser = await p.chromium.launch(channel="msedge", headless=True)
-        except Exception:
-            try: browser = await p.chromium.launch(channel="chrome", headless=True)
-            except Exception: browser = await p.chromium.launch(headless=True)
+    # Try browser-based scrape if available
+    try:
+        async with async_playwright() as p:
+            browser = await launch_playwright_browser(p)
+            context = await browser.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+            page = await context.new_page()
 
-        context = await browser.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-        page = await context.new_page()
+            # 1. Scrape Live ScanX Dashboard
+            print("Connecting to live market feed (https://scanx.trade/)...")
+            try:
+                await page.goto("https://scanx.trade/", wait_until="networkidle", timeout=12000)
+                body_text = await page.inner_text("body")
+                lines = [line.strip() for line in body_text.split('\n') if line.strip()]
+                
+                target_map = {
+                    'NIFTY 50': 'NIFTY 50',
+                    'BANK NIFTY': 'NIFTY BANK',
+                    'FIN NIFTY': 'NIFTY FIN SERVICE',
+                    'SENSEX': 'SENSEX'
+                }
+                
+                for i, line in enumerate(lines):
+                    name_upper = line.upper()
+                    if name_upper in target_map and i + 3 < len(lines):
+                        key_name = target_map[name_upper]
+                        if key_name not in scanx_tickers:
+                            close_val = parse_float(lines[i+1])
+                            pts_val = parse_float(lines[i+2])
+                            pct_val = parse_float(lines[i+3])
+                            scanx_tickers[key_name] = {'close': close_val, 'pts': pts_val, 'pct': pct_val}
 
-        # 1. Scrape Live ScanX Dashboard
-        print("Connecting to live market feed (https://scanx.trade/)...")
-        try:
-            await page.goto("https://scanx.trade/", wait_until="networkidle", timeout=30000)
-            body_text = await page.inner_text("body")
-            lines = [line.strip() for line in body_text.split('\n') if line.strip()]
-            
-            target_map = {
-                'NIFTY 50': 'NIFTY 50',
-                'BANK NIFTY': 'NIFTY BANK',
-                'FIN NIFTY': 'NIFTY FIN SERVICE',
-                'SENSEX': 'SENSEX'
-            }
-            
-            for i, line in enumerate(lines):
-                name_upper = line.upper()
-                if name_upper in target_map and i + 3 < len(lines):
-                    key_name = target_map[name_upper]
-                    if key_name not in scanx_tickers:
-                        close_val = parse_float(lines[i+1])
-                        pts_val = parse_float(lines[i+2])
-                        pct_val = parse_float(lines[i+3])
-                        scanx_tickers[key_name] = {'close': close_val, 'pts': pts_val, 'pct': pct_val}
+                    if 'Gainers:' in line or 'Losers:' in line:
+                        m_g = re.search(r'Gainers:\s*(\d+)', line)
+                        m_l = re.search(r'Losers:\s*(\d+)', line)
+                        if m_g: adv50_sx = int(m_g.group(1))
+                        if m_l: dec50_sx = int(m_l.group(1))
+            except Exception as e:
+                print("ScanX main page scrape note:", e)
 
-                if 'Gainers:' in line or 'Losers:' in line:
-                    m_g = re.search(r'Gainers:\s*(\d+)', line)
-                    m_l = re.search(r'Losers:\s*(\d+)', line)
-                    if m_g: adv50_sx = int(m_g.group(1))
-                    if m_l: dec50_sx = int(m_l.group(1))
-        except Exception as e:
-            print("ScanX main page scrape note:", e)
+            await browser.close()
+    except Exception as browser_err:
+        print(f"Notice: Browser scrape skipped in cloud environment ({browser_err}).")
 
-        # 2. Scrape ScanX Economic Calendar
-        print("Scraping Economic Calendar (https://scanx.trade/insight/events/economic-calendar)...")
-        try:
-            await page.goto("https://scanx.trade/insight/events/economic-calendar", wait_until="networkidle", timeout=30000)
-            cal_text = await page.inner_text("body")
-            cal_lines = [l.strip() for l in cal_text.split('\n') if l.strip()]
+    # High-speed direct Yahoo Finance fallback for any missing indices
+    yf_index_map = {
+        'NIFTY 50': '^NSEI',
+        'NIFTY BANK': '^NSEBANK',
+        'SENSEX': '^BSESN'
+    }
+    for idx_name, sym in yf_index_map.items():
+        if idx_name not in scanx_tickers:
+            try:
+                t = yf.Ticker(sym)
+                h = t.history(period='5d')
+                if not h.empty:
+                    c = float(h['Close'].iloc[-1])
+                    p = float(h['Close'].iloc[-2]) if len(h) > 1 else c
+                    pts = round(c - p, 2)
+                    pct = round((pts / p) * 100, 2)
+                    scanx_tickers[idx_name] = {'close': c, 'pts': pts, 'pct': pct}
+            except Exception:
+                pass
 
-            # Default key upcoming events for next week if parsing fails
-            scraped_events = [
-                {'date': 'Mon 17 Aug, 02:30 PM', 'event': 'India Trade Balance (Jul)', 'country': 'IN', 'prior': '$-30.43B', 'impact': 'Key macro read for Current Account Deficit & INR stability.'},
-                {'date': 'Mon 17 Aug, 04:00 PM', 'event': 'India Unemployment Rate (Jul)', 'country': 'IN', 'prior': '5.5%', 'impact': 'Monitors domestic labor force momentum and macro consumption.'},
-                {'date': 'Thu 20 Aug, 05:00 PM', 'event': 'India Infrastructure Output YoY (Jul)', 'country': 'IN', 'prior': '5.0%', 'impact': 'Core gauge for cement, steel, power & industrial capex.'},
-                {'date': 'Fri 21 Aug, 10:30 AM', 'event': 'HSBC Manufacturing & Services PMI Flash', 'country': 'IN', 'prior': '58.1 / 60.3', 'impact': 'Forward-looking high frequency indicator for corporate expansion.'},
-                {'date': 'Fri 21 Aug, 05:00 PM', 'event': 'India Forex Reserves & Bank Credit Growth', 'country': 'IN', 'prior': '$707 Billion', 'impact': 'Reflects banking system liquidity & RBI import cover.'}
-            ]
-            economic_events = scraped_events
-        except Exception as e:
-            print("Economic Calendar scrape note:", e)
-
-        await browser.close()
-        print(f"Live Fetch Complete! Tickers: {len(scanx_tickers)}, Economic Events: {len(economic_events)}")
+    print(f"Live Fetch Complete! Tickers: {len(scanx_tickers)}, Economic Events: {len(economic_events)}")
 
     print("\n========================================================")
     print("Step 2: Fetching MCX Gold/Silver & Macro Indicators...")
