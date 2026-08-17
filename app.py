@@ -70,22 +70,25 @@ st.markdown("""
 # Helper to generate page preview images if needed
 async def ensure_preview_images():
     if os.path.exists("weekly-market-dashboard.html"):
-        async with async_playwright() as p:
-            browser = None
-            for channel in ['msedge', 'chrome', None]:
-                try:
-                    if channel: browser = await p.chromium.launch(channel=channel, headless=True)
-                    else: browser = await p.chromium.launch(headless=True)
-                    break
-                except Exception: continue
-            if browser:
-                page = await browser.new_page(viewport={'width': 1920, 'height': 1200})
-                html_url = 'file:///' + os.path.abspath('weekly-market-dashboard.html').replace('\\', '/')
-                await page.goto(html_url, wait_until='networkidle')
-                await page.wait_for_timeout(800)
-                await page.locator('#page1Section').screenshot(path='page1_preview.png')
-                await page.locator('#page2Section').screenshot(path='page2_preview.png')
-                await browser.close()
+        try:
+            async with async_playwright() as p:
+                browser = None
+                for channel in ['msedge', 'chrome', None]:
+                    try:
+                        if channel: browser = await p.chromium.launch(channel=channel, headless=True)
+                        else: browser = await p.chromium.launch(headless=True)
+                        break
+                    except Exception: continue
+                if browser:
+                    page = await browser.new_page(viewport={'width': 1920, 'height': 1200})
+                    html_url = 'file:///' + os.path.abspath('weekly-market-dashboard.html').replace('\\', '/')
+                    await page.goto(html_url, wait_until='networkidle')
+                    await page.wait_for_timeout(800)
+                    await page.locator('#page1Section').screenshot(path='page1_preview.png')
+                    await page.locator('#page2Section').screenshot(path='page2_preview.png')
+                    await browser.close()
+        except Exception as err:
+            print("Preview capture notice:", err)
 
 # Sidebar Actions & Controls
 with st.sidebar:
