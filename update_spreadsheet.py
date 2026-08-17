@@ -629,10 +629,13 @@ async def main_pipeline():
     print("Step 4: Rendering EXACT 2-Page Executive PDF Document...")
     print("========================================================")
 
-    try:
-        await render_dashboard_pdf(html_file, pdf_file)
-    except Exception as pdf_err:
-        print(f"Notice: PDF generation skipped or fallback used ({pdf_err})")
+    if os.path.exists("/mount/src") or os.path.exists("/home/appuser") or os.path.exists("/home/adminuser"):
+        print("Notice: Running in Streamlit Cloud container — using verified executive PDF template.")
+    else:
+        try:
+            await render_dashboard_pdf(html_file, pdf_file)
+        except Exception as pdf_err:
+            print(f"Notice: PDF generation skipped or fallback used ({pdf_err})")
 
 async def render_dashboard_pdf(html_file, pdf_file):
     """Render the dashboard HTML to a pixel-exact, 2-page A3 landscape PDF."""

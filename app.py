@@ -67,44 +67,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-@st.cache_resource
-def setup_playwright():
-    """Ensure Playwright Chromium is available on Streamlit Cloud."""
-    try:
-        import subprocess, sys
-        cache_dirs = [
-            "/home/appuser/.cache/ms-playwright",
-            "/home/adminuser/.cache/ms-playwright",
-            os.path.expanduser("~/.cache/ms-playwright")
-        ]
-        if not any(os.path.exists(d) for d in cache_dirs):
-            try:
-                subprocess.run(["playwright", "install", "chromium"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False, timeout=120)
-            except Exception:
-                subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False, timeout=120)
-    except Exception as e:
-        print("Setup notice:", e)
-
-setup_playwright()
-
-# Helper to generate page preview images if needed
-async def ensure_preview_images():
-    if os.path.exists("weekly-market-dashboard.html"):
-        try:
-            from generate_shareable_pdf import launch_playwright_browser
-            async with async_playwright() as p:
-                browser = await launch_playwright_browser(p)
-                if browser:
-                    page = await browser.new_page(viewport={'width': 1920, 'height': 1200})
-                    html_url = 'file:///' + os.path.abspath('weekly-market-dashboard.html').replace('\\', '/')
-                    await page.goto(html_url, wait_until='networkidle')
-                    await page.wait_for_timeout(800)
-                    await page.locator('#page1Section').screenshot(path='page1_preview.png')
-                    await page.locator('#page2Section').screenshot(path='page2_preview.png')
-                    await browser.close()
-        except Exception as err:
-            print("Preview capture notice:", err)
-
 # Sidebar Actions & Controls
 with st.sidebar:
     if os.path.exists("raru_logo.png"):
@@ -118,21 +80,8 @@ with st.sidebar:
     if st.button("🔄 Refresh Live Market Data", use_container_width=True, type="primary"):
         with st.spinner("Fetching live market feeds, calculating MTD flows & updating spreadsheet..."):
             try:
-                # 1. Update Excel and HTML dashboard
+                # 1. Update Excel workbook and HTML interactive dashboard
                 asyncio.run(update_spreadsheet.main_pipeline())
-
-                # 2. Attempt PDF generation if headless browser is available
-                try:
-                    import generate_shareable_pdf
-                    asyncio.run(generate_shareable_pdf.generate_a4_executive_pdf())
-                except Exception as pdf_err:
-                    print(f"PDF generation notice ({pdf_err})")
-
-                # 3. Attempt preview screenshots if headless browser is available
-                try:
-                    asyncio.run(ensure_preview_images())
-                except Exception as prev_err:
-                    print(f"Preview capture notice ({prev_err})")
 
                 st.success("✅ Dashboard, Excel & Live Feeds synchronized successfully!")
                 st.rerun()
