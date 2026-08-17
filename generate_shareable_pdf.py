@@ -4,7 +4,56 @@ import json
 import re
 import datetime
 import os
+import sys
+import subprocess
 import pypdf
+
+def ensure_playwright_installed():
+    """Auto-install Playwright Chromium binaries on Linux/Streamlit Cloud if missing."""
+    try:
+        subprocess.run(
+            [sys.executable, "-m", "playwright", "install", "chromium"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+            timeout=120
+        )
+    except Exception as e:
+        print("Notice during playwright install:", e)
+
+async def launch_playwright_browser(p):
+    """Safely launch Chromium across Windows, macOS, and Linux / Streamlit Cloud environments."""
+    launch_args = ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu"]
+
+    # 1. On Windows / Mac, try channels first (msedge, chrome)
+    for ch in ["msedge", "chrome"]:
+        try:
+            return await p.chromium.launch(channel=ch, headless=True, args=launch_args)
+        except Exception:
+            pass
+
+    # 2. Try default playwright chromium launch
+    try:
+        return await p.chromium.launch(headless=True, args=launch_args)
+    except Exception as err:
+        print("Default launch failed, auto-installing Playwright Chromium...", err)
+
+    # 3. If failed (e.g. fresh Linux container), install chromium and retry
+    ensure_playwright_installed()
+    try:
+        return await p.chromium.launch(headless=True, args=launch_args)
+    except Exception:
+        pass
+
+    # 4. Check for system-installed chromium binary (from packages.txt)
+    for exec_path in ["/usr/bin/chromium", "/usr/bin/chromium-browser", "/usr/bin/google-chrome"]:
+        if os.path.exists(exec_path):
+            try:
+                return await p.chromium.launch(executable_path=exec_path, headless=True, args=launch_args)
+            except Exception:
+                pass
+
+    return await p.chromium.launch(headless=True, args=launch_args)
 
 async def generate_a4_executive_pdf():
     html_source_file = 'weekly-market-dashboard.html'
@@ -62,7 +111,8 @@ async def generate_a4_executive_pdf():
         color_cls = 'up' if up else 'down'
         pts_str = f"{'+' if pts_v > 0 else ''}{pts_v:,.2f}"
         pct_str = f"({'+' if pct_v > 0 else ''}{pct_v:.2f}%)"
-        disp_name = ix['name'] if 'SPOT' in ix['name'].upper() else f"{ix['name']} SPOT"
+        clean_name = ix['name'].replace('NIFTY FIN SERVICE', 'FIN NIFTY')
+        disp_name = clean_name if 'SPOT' in clean_name.upper() else f"{clean_name} SPOT"
         ticker_items_html.append(
             f'''<div class="ticker-pill">
                 <span class="t-name">{disp_name}</span>
@@ -70,7 +120,7 @@ async def generate_a4_executive_pdf():
                 <span class="t-chg mono {color_cls}">{arrow} {pts_str} {pct_str}</span>
             </div>'''
         )
-    ticker_bar_html = f'<div class="spot-ticker-bar">{"".join(ticker_items_html)}</div>'
+    ticker_bar_html = f'<div class="spot-ticker-bar"><span class="spot-tag">● LIVE SPOT BENCHMARKS</span>{"".join(ticker_items_html)}</div>'
 
     # Clean Sector Heatmap Table Rows (Fix +-0.00% bug)
     heatmap_rows_html = []
@@ -129,7 +179,7 @@ async def generate_a4_executive_pdf():
   body {{
     background: var(--bg);
     color: var(--text);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Aptos', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
     width: 297mm;
     margin: 0 auto;
@@ -138,8 +188,8 @@ async def generate_a4_executive_pdf():
     print-color-adjust: exact;
   }}
 
-  .mono {{ font-family: 'IBM Plex Mono', monospace; }}
-  .serif {{ font-family: 'Newsreader', serif; }}
+  .mono {{ font-family: 'Aptos Mono', 'IBM Plex Mono', 'Aptos', monospace; }}
+  .serif {{ font-family: 'Aptos Display', 'Aptos', 'Newsreader', sans-serif; }}
 
   .pdf-container {{
     width: 297mm;
@@ -167,8 +217,8 @@ async def generate_a4_executive_pdf():
   /* Header */
   header.masthead {{
     border-bottom: 2px solid var(--gold);
-    padding-bottom: 6px;
-    margin-bottom: 6px;
+    padding-bottom: 4px;
+    margin-bottom: 4px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -177,19 +227,19 @@ async def generate_a4_executive_pdf():
   .masthead-brand {{
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
   }}
 
   .masthead-logo {{
-    height: 38px;
+    height: 34px;
     width: auto;
     object-fit: contain;
   }}
 
   .masthead-left .eyebrow {{
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
     font-size: 9.5px;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.14em;
     color: var(--gold);
     text-transform: uppercase;
     font-weight: 700;
@@ -197,9 +247,9 @@ async def generate_a4_executive_pdf():
   }}
 
   .masthead-left h1 {{
-    font-family: 'Newsreader', serif;
-    font-weight: 600;
-    font-size: 24px;
+    font-family: 'Aptos Display', 'Aptos', 'Newsreader', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
     color: var(--text);
     letter-spacing: 0.01em;
     line-height: 1.1;
@@ -207,22 +257,22 @@ async def generate_a4_executive_pdf():
 
   .masthead-right {{
     text-align: right;
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
     font-size: 10px;
     color: var(--text-dim);
-    line-height: 1.3;
+    line-height: 1.35;
   }}
 
-  .stamp {{
+  .badge-page {{
     display: inline-block;
     border: 1px solid var(--gold);
     background: var(--gold-bg);
     color: var(--gold);
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 9.5px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.03em;
     margin-bottom: 2px;
   }}
 
@@ -233,78 +283,92 @@ async def generate_a4_executive_pdf():
     align-items: center;
     background: #F8FAFC;
     border: 1px solid var(--border);
-    border-radius: 5px;
-    padding: 5px 10px;
-    margin-bottom: 8px;
+    border-left: 4px solid var(--gold);
+    border-radius: 4px;
+    padding: 3px 8px;
+    margin-bottom: 4px;
+    gap: 6px;
+  }}
+
+  .spot-tag {{
+    font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
   }}
 
   .ticker-pill {{
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 10.5px;
-    font-family: 'IBM Plex Mono', monospace;
+    gap: 4px;
+    font-size: 10px;
+    font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
+    white-space: nowrap;
   }}
 
   .ticker-pill .t-name {{ font-weight: 700; color: var(--text); }}
   .ticker-pill .t-close {{ font-weight: 600; color: var(--text-dim); }}
-  .ticker-pill .t-chg {{ font-weight: 700; font-size: 10px; }}
+  .ticker-pill .t-chg {{ font-weight: 700; font-size: 9.5px; }}
 
   .up {{ color: var(--green); }}
   .down {{ color: var(--red); }}
+  .neutral {{ color: var(--text-dim); }}
 
   /* Takeaways Box */
   .takeaways-box {{
     background: #FFFBEB;
     border: 1px solid #FCD34D;
     border-left: 4px solid var(--gold);
-    border-radius: 5px;
-    padding: 6px 10px;
-    margin-bottom: 8px;
+    border-radius: 4px;
+    padding: 4px 8px;
+    margin-bottom: 4px;
   }}
 
   .takeaways-head {{
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.1em;
+    font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.08em;
     color: var(--gold);
     text-transform: uppercase;
     font-weight: 700;
-    margin-bottom: 3px;
+    margin-bottom: 2px;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
   }}
 
   .takeaways-list {{
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 1.5px;
   }}
 
   .takeaways-list li {{
-    font-size: 11px;
+    font-size: 10.5px;
     color: #78350F;
-    line-height: 1.3;
+    line-height: 1.25;
     position: relative;
-    padding-left: 12px;
+    padding-left: 10px;
     font-weight: 500;
   }}
 
   .takeaways-list li::before {{
     content: "•";
     position: absolute;
-    left: 2px;
+    left: 1px;
     color: var(--gold);
-    font-size: 13px;
+    font-size: 11px;
   }}
 
   /* Grid Layout */
   .grid {{
     display: grid;
     grid-template-columns: repeat(12, 1fr);
-    gap: 8px;
+    gap: 5px;
   }}
 
   .span-12 {{ grid-column: span 12; }}
@@ -317,30 +381,30 @@ async def generate_a4_executive_pdf():
   .panel {{
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 5px;
-    padding: 6px 10px 8px;
+    border-radius: 4px;
+    padding: 4px 8px 5px;
   }}
 
   .panel-head {{
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    margin-bottom: 5px;
+    margin-bottom: 3px;
     border-bottom: 1px solid var(--border);
-    padding-bottom: 3px;
+    padding-bottom: 2px;
   }}
 
   .panel-head h2 {{
-    font-family: 'Newsreader', serif;
-    font-weight: 600;
-    font-size: 14.5px;
+    font-family: 'Aptos Display', 'Aptos', 'Newsreader', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
     color: var(--text);
   }}
 
   .panel-head .tag {{
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
     font-size: 8.5px;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--text-faint);
     font-weight: 600;
@@ -350,81 +414,82 @@ async def generate_a4_executive_pdf():
   .macro-grid {{
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    gap: 6px;
+    gap: 4px;
   }}
 
   .macro-card {{
     background: var(--panel-2);
     border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 5px 7px;
-    font-family: 'IBM Plex Mono', monospace;
+    border-radius: 3px;
+    padding: 3px 5px;
+    font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
   }}
 
-  .macro-card .m-lbl {{ font-size: 8.5px; color: var(--gold); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; }}
-  .macro-card .m-val {{ font-size: 13px; font-weight: 700; color: var(--text); margin: 1px 0; }}
-  .macro-card .m-sub {{ font-size: 9px; font-weight: 600; }}
+  .macro-card .m-lbl {{ font-size: 8px; color: var(--gold); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; }}
+  .macro-card .m-val {{ font-size: 12.5px; font-weight: 700; color: var(--text); margin: 0; line-height: 1.2; }}
+  .macro-card .m-sub {{ font-size: 8.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
 
   /* Tables */
   table {{ width: 100%; border-collapse: collapse; }}
-  th + th, td + td {{ padding-left: 10px; }}   /* gutter keeps adjacent headers from touching */
 
   th {{
     text-align: left;
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
     font-size: 8.5px;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.03em;
     text-transform: uppercase;
     color: var(--text-faint);
     font-weight: 700;
-    padding: 0 4px 3px 0;
-    border-bottom: 1.5px solid var(--border);
+    padding: 2px 5px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
   }}
 
   td {{
-    padding: 3px 4px 3px 0;
+    padding: 2px 5px;
     border-bottom: 1px solid #F1F5F9;
-    font-size: 10.5px;
+    font-size: 10px;
     color: var(--text);
-    vertical-align: top;
-    line-height: 1.25;
+    vertical-align: middle;
+    line-height: 1.2;
   }}
 
-  td.num, th.num {{ font-family: 'IBM Plex Mono', monospace; text-align: right; }}
+  td.num, th.num {{ font-family: 'Aptos Mono', 'IBM Plex Mono', monospace; text-align: right; }}
   tr:last-child td {{ border-bottom: none; }}
 
   .company {{ font-weight: 600; color: var(--text); }}
-  .ticker-sub {{ color: var(--text-faint); font-size: 9px; font-family: 'IBM Plex Mono', monospace; }}
+  .ticker-sub {{ color: var(--text-faint); font-size: 9px; font-family: 'Aptos Mono', 'IBM Plex Mono', monospace; }}
 
   /* Badges */
   .pill {{
     display: inline-block;
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
     font-size: 8.5px;
     font-weight: 600;
-    letter-spacing: 0.03em;
-    padding: 1px 4px;
-    border-radius: 4px;
+    letter-spacing: 0.02em;
+    padding: 1.5px 5px;
+    border-radius: 3px;
     border: 1px solid;
+    white-space: nowrap;
   }}
 
   .pill.bearish, .pill.underperforming {{ color: var(--red); border-color: #FCA5A5; background: #FEF2F2; }}
   .pill.bullish, .pill.outperforming {{ color: var(--green); border-color: #86EFAC; background: #F0FDF4; }}
-  .pill.neutral {{ color: var(--text-dim); border-color: #E2E8F0; background: #F8FAFC; }}
+  .pill.neutral {{ color: var(--text-dim); border-color: #CBD5E1; background: #F8FAFC; }}
   .pill.undervalued {{ color: var(--green); border-color: #86EFAC; background: #F0FDF4; }}
   .pill.elevated {{ color: var(--gold); border-color: #FDE68A; background: #FEF3C7; }}
   .pill.fair {{ color: var(--blue); border-color: #BFDBFE; background: #EFF6FF; }}
 
   /* News Cards */
-  .news-grid {{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }}
+  .news-grid {{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; }}
   .news-col h3 {{
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 0.06em;
+    font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
+    font-size: 8.5px;
+    letter-spacing: 0.05em;
     color: var(--gold);
     text-transform: uppercase;
-    margin-bottom: 3px;
-    padding-bottom: 2px;
+    margin-bottom: 2px;
+    padding-bottom: 1px;
     border-bottom: 1px solid var(--border);
     font-weight: 700;
   }}
@@ -432,45 +497,46 @@ async def generate_a4_executive_pdf():
   .news-card {{
     background: var(--panel-2);
     border: 1px solid var(--border);
-    padding: 4px 6px;
-    border-radius: 4px;
-    margin-bottom: 3px;
+    padding: 2.5px 5px;
+    border-radius: 3px;
+    margin-bottom: 2px;
   }}
 
   .news-card:last-child {{ margin-bottom: 0; }}
-  .news-card .n-header {{ display: flex; justify-content: space-between; font-size: 8.5px; color: var(--text-faint); font-family: 'IBM Plex Mono', monospace; margin-bottom: 1px; font-weight: 600; }}
-  .news-card .n-title {{ font-weight: 600; font-size: 10.5px; color: var(--text); margin-bottom: 1px; line-height: 1.25; }}
-  .news-card .n-impact {{ font-size: 10px; color: var(--text-dim); line-height: 1.25; }}
+  .news-card .n-header {{ display: flex; justify-content: space-between; font-size: 8.5px; color: var(--text-faint); font-family: 'Aptos Mono', 'IBM Plex Mono', monospace; margin-bottom: 1px; font-weight: 600; }}
+  .news-card .n-title {{ font-weight: 600; font-size: 10px; color: var(--text); margin-bottom: 1px; line-height: 1.2; }}
+  .news-card .n-impact {{ font-size: 9px; color: var(--text-dim); line-height: 1.2; }}
 
   /* Stat Row */
-  .stat-row {{ display: flex; gap: 8px; margin-bottom: 3px; }}
+  .stat-row {{ display: flex; gap: 6px; margin-bottom: 2px; }}
   .stat {{ flex: 1; }}
-  .stat .label {{ font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-faint); font-weight: 700; }}
-  .stat .value {{ font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 700; }}
+  .stat .label {{ font-family: 'Aptos Mono', 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: 0.03em; text-transform: uppercase; color: var(--text-faint); font-weight: 700; }}
+  .stat .value {{ font-family: 'Aptos Mono', 'IBM Plex Mono', monospace; font-size: 13.5px; font-weight: 700; }}
   .stat .sub {{ font-size: 9px; color: var(--text-dim); margin-top: 1px; }}
 
   .note {{
-    font-size: 10px;
+    font-size: 9px;
     color: var(--text-dim);
-    line-height: 1.3;
-    margin-top: 3px;
-    padding-top: 3px;
+    line-height: 1.25;
+    margin-top: 2px;
+    padding-top: 2px;
     border-top: 1px dashed var(--border);
   }}
 
   .mtd-flows-badge {{
-    margin-top: 3px;
-    padding: 4px 8px;
+    margin-top: 2px;
+    padding: 3px 6px;
     background: #F8FAFC;
     border: 1px solid var(--border);
-    border-radius: 4px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10.5px;
+    border-radius: 3px;
+    font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
+    font-size: 9.5px;
     font-weight: 500;
     color: var(--text-dim);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    white-space: nowrap;
   }}
 
   .mtd-flows-badge .flow-val {{ font-weight: 700; }}
@@ -479,13 +545,13 @@ async def generate_a4_executive_pdf():
 
   footer {{
     position: absolute;
-    bottom: 4mm;
+    bottom: 3mm;
     left: 7mm;
     right: 7mm;
-    padding-top: 4px;
+    padding-top: 3px;
     border-top: 1px solid var(--border);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 9px;
+    font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
+    font-size: 8.5px;
     color: var(--text-faint);
     display: flex;
     justify-content: space-between;
@@ -508,8 +574,7 @@ async def generate_a4_executive_pdf():
         </div>
       </div>
       <div class="masthead-right">
-        <span class="stamp">Last Updated: {last_updated_str}</span><br>
-        Confidential A4 Briefing (Page 1 of 2)<br>
+        <span class="badge-page">Executive Briefing (Page 1 of 2)</span><br>
         All capital flows in ₹ Crore unless noted
       </div>
     </header>
@@ -632,19 +697,8 @@ async def generate_a4_executive_pdf():
           </div>
         </div>
       </section>
-    </div>
 
-    <footer>
-      <span>Portfolio Engagement &amp; Executive Research Desk</span>
-      <span>Confidential A4 Executive Briefing (Page 1 of 2)</span>
-    </footer>
-  </div>
-
-  <!-- ==================== PAGE 2 ==================== -->
-  <div class="pdf-page">
-
-    <div class="grid">
-      <!-- Sector Heatmap -->
+      <!-- Sector Performance & Rotation Read (Page 1 Bottom) -->
       <section class="panel span-12">
         <div class="panel-head"><h2>Sector Performance &amp; Rotation Read</h2><span class="tag">Weekly % Performance</span></div>
         <table>
@@ -656,7 +710,35 @@ async def generate_a4_executive_pdf():
           </tbody>
         </table>
       </section>
+    </div>
 
+    <footer>
+      <span>Portfolio Engagement &amp; Executive Research Desk</span>
+      <span>Confidential A4 Executive Briefing (Page 1 of 2)</span>
+    </footer>
+  </div>
+
+  <!-- ==================== PAGE 2 ==================== -->
+  <div class="pdf-page">
+
+    <header class="masthead">
+      <div class="masthead-brand">
+        <img src="raru_logo.png" alt="Raru Logo" class="masthead-logo">
+        <div class="masthead-left">
+          <div class="eyebrow">Institutional Capital, Corporate Filings &amp; Economic Calendar</div>
+          <h1>Executive Weekly Market Briefing</h1>
+        </div>
+      </div>
+      <div class="masthead-right">
+        <span class="badge-page">Executive Briefing (Page 2 of 2)</span><br>
+        All capital flows in ₹ Crore unless noted
+      </div>
+    </header>
+
+    <!-- Spot Index Ticker Bar -->
+    {ticker_bar_html}
+
+    <div class="grid">
       <!-- FII vs DII Capital Flows Chart -->
       <section class="panel span-7">
         <div class="panel-head"><h2>FII vs DII Capital Flows</h2><span class="tag">Net Flow (₹ Cr) — Session Series</span></div>
@@ -711,8 +793,8 @@ async def generate_a4_executive_pdf():
             {"".join(f'''<tr>
               <td class="company">{i['co']}</td>
               <td>{i['cat']}</td>
-              <td class="mono" style="font-size:10px;">{i['dates']}</td>
-              <td class="num mono">{i['band']}</td>
+              <td class="mono" style="font-size:9.5px; white-space:nowrap;">{i['dates']}</td>
+              <td class="num mono" style="white-space:nowrap;">{i['band']}</td>
             </tr>''' for i in ipos)}
           </tbody>
         </table>
@@ -722,14 +804,14 @@ async def generate_a4_executive_pdf():
       <section class="panel span-12">
         <div class="panel-head"><h2>Upcoming Economic Calendar &amp; Macro Events (Next Week)</h2><span class="tag">ScanX Insights · High Impact</span></div>
         <table>
-          <thead><tr><th>Date &amp; Time</th><th>Country</th><th>Economic Event / Announcement</th><th>Prior Data / Consensus</th><th>Market Impact Read</th></tr></thead>
+          <thead><tr><th style="white-space:nowrap;">Date &amp; Time</th><th>Country</th><th>Economic Event / Announcement</th><th style="white-space:nowrap;">Prior Data / Consensus</th><th>Market Impact Read</th></tr></thead>
           <tbody>
             {"".join(f'''<tr>
-              <td class="mono" style="font-weight:600; font-size:10px;">{e['date']}</td>
+              <td class="mono" style="font-weight:600; font-size:9.5px; white-space:nowrap;">{e['date']}</td>
               <td class="mono" style="font-size:9px;"><span class="pill neutral">{e['country']}</span></td>
               <td class="company">{e['event']}</td>
-              <td class="mono" style="font-size:10px;">{e['prior']}</td>
-              <td style="color:var(--text-dim); font-size:10.5px;">{e['impact']}</td>
+              <td class="mono" style="font-size:9.5px; white-space:nowrap;">{e['prior']}</td>
+              <td style="color:var(--text-dim); font-size:10px; line-height:1.25;">{e['impact']}</td>
             </tr>''' for e in economicEvents)}
           </tbody>
         </table>
@@ -745,7 +827,7 @@ async def generate_a4_executive_pdf():
 </div>
 
 <script>
-Chart.defaults.font.family = "'IBM Plex Mono', monospace";
+Chart.defaults.font.family = "'Aptos Mono', 'IBM Plex Mono', 'Aptos', monospace";
 Chart.defaults.font.size = 9;
 Chart.defaults.color = '#475569';
 
@@ -755,33 +837,47 @@ if (typeof ChartDataLabels !== 'undefined') {{
 
 const fiiDiiData = {json.dumps(fiiDii)};
 
-new Chart(document.getElementById('pdfFiiDiiChart'), {{
-  type:'bar',
-  data:{{
-    labels: fiiDiiData.map(d=>d.date),
-    datasets:[
-      {{label:'FII Net', data:fiiDiiData.map(d=>d.fii), backgroundColor:'#B45309', borderRadius:3, maxBarThickness:14}},
-      {{label:'DII Net', data:fiiDiiData.map(d=>d.dii), backgroundColor:'#15803D', borderRadius:3, maxBarThickness:14}},
-    ]
-  }},
-  options:{{
-    responsive:true, maintainAspectRatio:false, animation:false,
-    plugins:{{
-      legend:{{ position:'top', align:'end', labels:{{boxWidth:8, boxHeight:8, color:'#475569', font:{{size:9, weight:'bold'}}}} }},
-      datalabels: {{
-        anchor: 'end',
-        align: 'top',
-        color: '#0F172A',
-        font: {{ size: 7.5, weight: 'bold', family: "'IBM Plex Mono', monospace" }},
-        formatter: (val) => (val !== 0 ? (val > 0 ? '+' : '') + Math.round(val) + ' Cr' : '')
-      }}
+function initFiiDiiChart() {{
+  new Chart(document.getElementById('pdfFiiDiiChart'), {{
+    type:'bar',
+    data:{{
+      labels: fiiDiiData.map(d=>d.date),
+      datasets:[
+        {{label:'FII Net', data:fiiDiiData.map(d=>d.fii), backgroundColor:'#B45309', borderRadius:3, maxBarThickness:13}},
+        {{label:'DII Net', data:fiiDiiData.map(d=>d.dii), backgroundColor:'#15803D', borderRadius:3, maxBarThickness:13}},
+      ]
     }},
-    scales:{{
-      x:{{ grid:{{ color:'#E2E8F0' }}, ticks:{{ color:'#475569', font:{{size:9}} }} }},
-      y:{{ grid:{{ color:'#E2E8F0' }}, ticks:{{ color:'#475569', font:{{size:9}}, callback:v=>'₹'+v }} }}
+    options:{{
+      responsive:true, maintainAspectRatio:false, animation:false,
+      layout:{{ padding:{{ top:16, bottom:4, left:6, right:6 }} }},
+      plugins:{{
+        legend:{{ position:'top', align:'end', labels:{{boxWidth:7, boxHeight:7, color:'#475569', font:{{size:9, weight:'600'}}}} }},
+        datalabels: {{
+          anchor: function(context) {{
+            return context.dataset.data[context.dataIndex] >= 0 ? 'end' : 'end';
+          }},
+          align: function(context) {{
+            return context.dataset.data[context.dataIndex] >= 0 ? 'top' : 'bottom';
+          }},
+          offset: 2,
+          color: '#0F172A',
+          font: {{ size: 8, weight: 'bold', family: "'Aptos Mono', 'IBM Plex Mono', monospace" }},
+          formatter: (val) => (val !== 0 ? (val > 0 ? '+' : '') + Math.round(val) + ' Cr' : '')
+        }}
+      }},
+      scales:{{
+        x:{{ grid:{{ color:'#E2E8F0' }}, ticks:{{ color:'#475569', font:{{size:9}} }} }},
+        y:{{ grid:{{ color:'#E2E8F0' }}, ticks:{{ color:'#475569', font:{{size:9}}, callback:v=>'₹'+v }} }}
+      }}
     }}
-  }}
-}});
+  }});
+}}
+
+if (document.fonts && document.fonts.ready) {{
+  document.fonts.ready.then(initFiiDiiChart);
+}} else {{
+  window.addEventListener('load', initFiiDiiChart);
+}}
 </script>
 
 </body>
@@ -794,16 +890,14 @@ new Chart(document.getElementById('pdfFiiDiiChart'), {{
 
     print("Rendering Pristine A4 Format Executive PDF using Playwright...")
     async with async_playwright() as p:
-        try: browser = await p.chromium.launch(channel="msedge", headless=True)
-        except Exception:
-            try: browser = await p.chromium.launch(channel="chrome", headless=True)
-            except Exception: browser = await p.chromium.launch(headless=True)
+        browser = await launch_playwright_browser(p)
 
-        page = await browser.new_page(viewport={"width": 1123, "height": 794})
+        page = await browser.new_page(viewport={"width": 1123, "height": 794}, device_scale_factor=2)
         abs_temp_path = os.path.abspath(temp_html)
         await page.goto(f"file:///{abs_temp_path}", wait_until="networkidle")
+        await page.evaluate("document.fonts.ready")
         await page.emulate_media(media="print")
-        await page.wait_for_timeout(500)
+        await page.wait_for_timeout(600)
 
         # scale=1 + prefer_css_page_size: the CSS page box IS the sheet, so the
         # layout maps 1:1 onto the paper instead of being shrunk into a corner.

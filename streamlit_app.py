@@ -23,9 +23,9 @@ st.markdown("""
     
     .stApp {
         background-color: #F8FAFC;
-        font-family: 'Inter', sans-serif;
+        font-family: 'Aptos', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
     }
-    .mono { font-family: 'IBM Plex Mono', monospace; }
+    .mono { font-family: 'Aptos Mono', 'IBM Plex Mono', monospace; }
     
     .spot-strip {
         background: #FFFFFF;
@@ -40,7 +40,7 @@ st.markdown("""
         box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
     .spot-badge {
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
         font-size: 11px;
         font-weight: 700;
         color: #B45309;
@@ -55,30 +55,36 @@ st.markdown("""
         box-shadow: 0 1px 2px rgba(0,0,0,0.03);
     }
     div[data-testid="stMetricValue"] {
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
         font-weight: 700;
         font-size: 22px;
     }
     div[data-testid="stMetricDelta"] {
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: 'Aptos Mono', 'IBM Plex Mono', monospace;
         font-weight: 600;
         font-size: 13px;
     }
 </style>
 """, unsafe_allow_html=True)
 
+@st.cache_resource
+def setup_playwright():
+    """Ensure Playwright Chromium is available on Streamlit Cloud."""
+    try:
+        import subprocess, sys
+        subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False, timeout=120)
+    except Exception as e:
+        print("Setup notice:", e)
+
+setup_playwright()
+
 # Helper to generate page preview images if needed
 async def ensure_preview_images():
     if os.path.exists("weekly-market-dashboard.html"):
         try:
+            from generate_shareable_pdf import launch_playwright_browser
             async with async_playwright() as p:
-                browser = None
-                for channel in ['msedge', 'chrome', None]:
-                    try:
-                        if channel: browser = await p.chromium.launch(channel=channel, headless=True)
-                        else: browser = await p.chromium.launch(headless=True)
-                        break
-                    except Exception: continue
+                browser = await launch_playwright_browser(p)
                 if browser:
                     page = await browser.new_page(viewport={'width': 1920, 'height': 1200})
                     html_url = 'file:///' + os.path.abspath('weekly-market-dashboard.html').replace('\\', '/')
@@ -103,9 +109,11 @@ with st.sidebar:
     if st.button("🔄 Refresh Live Market Data", use_container_width=True, type="primary"):
         with st.spinner("Fetching live market feeds, calculating MTD flows & updating spreadsheet..."):
             try:
+                import generate_shareable_pdf
                 asyncio.run(update_spreadsheet.main_pipeline())
+                asyncio.run(generate_shareable_pdf.generate_a4_executive_pdf())
                 asyncio.run(ensure_preview_images())
-                st.success("✅ Dashboard & Excel synchronized successfully!")
+                st.success("✅ Dashboard, Excel & PDF synchronized successfully!")
                 st.rerun()
             except Exception as e:
                 st.error(f"Execution Error: {e}")

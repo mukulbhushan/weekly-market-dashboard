@@ -7,7 +7,56 @@ import openpyxl
 import requests
 import yfinance as yf
 import os
+import sys
+import subprocess
 import pypdf
+
+def ensure_playwright_installed():
+    """Auto-install Playwright Chromium binaries on Linux/Streamlit Cloud if missing."""
+    try:
+        subprocess.run(
+            [sys.executable, "-m", "playwright", "install", "chromium"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+            timeout=120
+        )
+    except Exception as e:
+        print("Notice during playwright install:", e)
+
+async def launch_playwright_browser(p):
+    """Safely launch Chromium across Windows, macOS, and Linux / Streamlit Cloud environments."""
+    launch_args = ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu"]
+
+    # 1. On Windows / Mac, try channels first (msedge, chrome)
+    for ch in ["msedge", "chrome"]:
+        try:
+            return await p.chromium.launch(channel=ch, headless=True, args=launch_args)
+        except Exception:
+            pass
+
+    # 2. Try default playwright chromium launch
+    try:
+        return await p.chromium.launch(headless=True, args=launch_args)
+    except Exception as err:
+        print("Default launch failed, auto-installing Playwright Chromium...", err)
+
+    # 3. If failed (e.g. fresh Linux container), install chromium and retry
+    ensure_playwright_installed()
+    try:
+        return await p.chromium.launch(headless=True, args=launch_args)
+    except Exception:
+        pass
+
+    # 4. Check for system-installed chromium binary (from packages.txt)
+    for exec_path in ["/usr/bin/chromium", "/usr/bin/chromium-browser", "/usr/bin/google-chrome"]:
+        if os.path.exists(exec_path):
+            try:
+                return await p.chromium.launch(executable_path=exec_path, headless=True, args=launch_args)
+            except Exception:
+                pass
+
+    return await p.chromium.launch(headless=True, args=launch_args)
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -585,21 +634,19 @@ async def main_pipeline():
 async def render_dashboard_pdf(html_file, pdf_file):
     """Render the dashboard HTML to a pixel-exact, 2-page A3 landscape PDF."""
     async with async_playwright() as p:
-        try: browser = await p.chromium.launch(channel="msedge", headless=True)
-        except Exception:
-            try: browser = await p.chromium.launch(channel="chrome", headless=True)
-            except Exception: browser = await p.chromium.launch(headless=True)
+        browser = await launch_playwright_browser(p)
 
         # Viewport matches the printable area of an A3 landscape page (420x297mm
         # at 96 dpi, less the 10mm/9mm page padding) so what we measure is what prints.
-        page = await browser.new_page(viewport={"width": 1512, "height": 1035})
+        page = await browser.new_page(viewport={"width": 1512, "height": 1035}, device_scale_factor=2)
         abs_html_path = os.path.abspath(html_file)
         await page.goto(f"file:///{abs_html_path}", wait_until="networkidle")
 
-        # Lay the document out under print rules, then auto-fit each page box
+        # Wait for web fonts to load completely before measuring layout & rendering PDF
+        await page.evaluate("document.fonts.ready")
         await page.emulate_media(media="print")
         await page.wait_for_timeout(600)
-        fit_scale = await page.evaluate("window.preparePdfLayout()")
+        fit_scale = await page.evaluate("window.preparePdfLayout ? window.preparePdfLayout() : 1")
         await page.wait_for_timeout(400)
         print(f"   Page auto-fit scale applied: {fit_scale:.3f}")
 
@@ -671,12 +718,12 @@ def generate_html_dashboard(html_file, indices, adv50, dec50, adv500, dec500, pe
   body{
     background:var(--bg);
     color:var(--text);
-    font-family:'Inter',sans-serif;
+    font-family:'Aptos', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
     -webkit-font-smoothing:antialiased;
     padding-bottom:30px;
   }
-  .mono{font-family:'IBM Plex Mono',monospace;}
-  .serif{font-family:'Newsreader',serif;}
+  .mono{font-family:'Aptos Mono', 'IBM Plex Mono', 'Aptos', monospace;}
+  .serif{font-family:'Aptos Display', 'Aptos', 'Newsreader', sans-serif;}
 
   #pageWrapper {
     width: 100%;
@@ -707,17 +754,17 @@ def generate_html_dashboard(html_file, indices, adv50, dec50, adv500, dec500, pe
     object-fit: contain;
   }
   .masthead-left .eyebrow{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:10px;
+    font-family:'Aptos Mono', 'IBM Plex Mono', monospace;
+    font-size:10.5px;
     letter-spacing:0.16em;
     color:var(--gold);
     text-transform:uppercase;
     margin-bottom:2px;
-    font-weight: 600;
+    font-weight: 700;
   }
   .masthead-left h1{
-    font-family:'Newsreader',serif;
-    font-weight:600;
+    font-family:'Aptos Display', 'Aptos', 'Newsreader', sans-serif;
+    font-weight:700;
     font-style:normal;
     font-size:26px;
     color:var(--text);
@@ -725,22 +772,22 @@ def generate_html_dashboard(html_file, indices, adv50, dec50, adv500, dec500, pe
   }
   .masthead-right{
     text-align:right;
-    font-family:'IBM Plex Mono',monospace;
+    font-family:'Aptos Mono', 'IBM Plex Mono', monospace;
     font-size:11px;
     color:var(--text-dim);
     line-height:1.45;
   }
-  .masthead-right .stamp{
+  .masthead-right .badge-page{
     display:inline-block;
     border:1px solid var(--gold);
     background: var(--gold-bg);
     color:var(--gold);
     padding:3px 10px;
     border-radius:3px;
-    font-size:10px;
-    letter-spacing:0.06em;
+    font-size:10.5px;
+    letter-spacing:0.04em;
     margin-bottom:4px;
-    font-weight: 600;
+    font-weight: 700;
   }
   .pdf-btn {
     background: var(--gold);
@@ -1259,8 +1306,7 @@ def generate_html_dashboard(html_file, indices, adv50, dec50, adv500, dec500, pe
     </div>
   </div>
   <div class="masthead-right">
-    <span class="stamp">Last Updated: """ + last_updated_str + """</span><br>
-    Executive Briefing Report (Page 1 of 2)<br>
+    <span class="badge-page">Executive Briefing (Page 1 of 2)</span><br>
     All flows in ₹ Crore unless noted<br>
     <button class="pdf-btn" onclick="exportPDF()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -1377,7 +1423,7 @@ def generate_html_dashboard(html_file, indices, adv50, dec50, adv500, dec500, pe
     </div>
   </div>
   <div class="masthead-right">
-    <span class="stamp">Last Updated: """ + last_updated_str + """</span><br>
+    <span class="badge-page">Executive Briefing (Page 2 of 2)</span><br>
     Executive Briefing Report (Page 2 of 2)
   </div>
 </header>
@@ -1661,34 +1707,50 @@ if (typeof ChartDataLabels !== 'undefined') {
   Chart.register(ChartDataLabels);
 }
 
-window.fiiDiiChartInstance = new Chart(document.getElementById('fiiDiiChart'), {
-  type:'bar',
-  data:{
-    labels: fiiDii.map(d=>d.date),
-    datasets:[
-      {label:'FII Net', data:fiiDii.map(d=>d.fii), backgroundColor:'#B45309', borderRadius:2, maxBarThickness:15},
-      {label:'DII Net', data:fiiDii.map(d=>d.dii), backgroundColor:'#15803D', borderRadius:2, maxBarThickness:15},
-    ]
-  },
-  options:{
-    responsive:true, maintainAspectRatio:false, animation:false,
-    layout:{ padding:{ top:14, right:6 } },
-    plugins:{
-      legend:{ position:'top', align:'end', labels:{boxWidth:8, boxHeight:8, color:'#475569'} },
-      datalabels: {
-        anchor: 'end',
-        align: 'top',
-        color: '#0F172A',
-        font: { size: 8, weight: 'bold', family: "'IBM Plex Mono', monospace" },
-        formatter: (val) => (val !== 0 ? (val > 0 ? '+' : '') + Math.round(val) + ' Cr' : '')
-      }
-    },
-    scales:{
-      x:{ grid:{ color:'#E2E8F0' }, ticks:{ color:'#64748B' } },
-      y:{ grid:{ color:'#E2E8F0' }, ticks:{ color:'#64748B', callback:v=>'₹'+v } }
-    }
+function initFiiDiiChart() {
+  if (window.fiiDiiChartInstance) {
+    window.fiiDiiChartInstance.destroy();
   }
-});
+  window.fiiDiiChartInstance = new Chart(document.getElementById('fiiDiiChart'), {
+    type:'bar',
+    data:{
+      labels: fiiDii.map(d=>d.date),
+      datasets:[
+        {label:'FII Net', data:fiiDii.map(d=>d.fii), backgroundColor:'#B45309', borderRadius:2, maxBarThickness:15},
+        {label:'DII Net', data:fiiDii.map(d=>d.dii), backgroundColor:'#15803D', borderRadius:2, maxBarThickness:15},
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:false,
+      layout:{ padding:{ top:16, bottom:4, left:6, right:6 } },
+      plugins:{
+        legend:{ position:'top', align:'end', labels:{boxWidth:8, boxHeight:8, color:'#475569', font:{size:9, weight:'600'}} },
+        datalabels: {
+          anchor: function(context) {
+            return context.dataset.data[context.dataIndex] >= 0 ? 'end' : 'end';
+          },
+          align: function(context) {
+            return context.dataset.data[context.dataIndex] >= 0 ? 'top' : 'bottom';
+          },
+          offset: 2,
+          color: '#0F172A',
+          font: { size: 8, weight: 'bold', family: "'IBM Plex Mono', monospace" },
+          formatter: (val) => (val !== 0 ? (val > 0 ? '+' : '') + Math.round(val) + ' Cr' : '')
+        }
+      },
+      scales:{
+        x:{ grid:{ color:'#E2E8F0' }, ticks:{ color:'#64748B', font:{size:9, family:"'IBM Plex Mono', monospace"} } },
+        y:{ grid:{ color:'#E2E8F0' }, ticks:{ color:'#64748B', font:{size:9, family:"'IBM Plex Mono', monospace"}, callback:v=>'₹'+v } }
+      }
+    }
+  });
+}
+
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(initFiiDiiChart);
+} else {
+  window.addEventListener('load', initFiiDiiChart);
+}
 
 // ---------- Print / PDF Auto-Fit ----------
 // Measures each physical page box, then applies ONE uniform scale so both
