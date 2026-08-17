@@ -72,12 +72,18 @@ def setup_playwright():
     """Ensure Playwright Chromium is available on Streamlit Cloud."""
     try:
         import subprocess, sys
-        subprocess.run(["playwright", "install", "chromium"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False, timeout=120)
-    except Exception:
-        try:
-            subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False, timeout=120)
-        except Exception as e:
-            print("Setup notice:", e)
+        cache_dirs = [
+            "/home/appuser/.cache/ms-playwright",
+            "/home/adminuser/.cache/ms-playwright",
+            os.path.expanduser("~/.cache/ms-playwright")
+        ]
+        if not any(os.path.exists(d) for d in cache_dirs):
+            try:
+                subprocess.run(["playwright", "install", "chromium"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False, timeout=120)
+            except Exception:
+                subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False, timeout=120)
+    except Exception as e:
+        print("Setup notice:", e)
 
 setup_playwright()
 
