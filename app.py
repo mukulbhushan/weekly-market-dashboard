@@ -118,11 +118,23 @@ with st.sidebar:
     if st.button("🔄 Refresh Live Market Data", use_container_width=True, type="primary"):
         with st.spinner("Fetching live market feeds, calculating MTD flows & updating spreadsheet..."):
             try:
-                import generate_shareable_pdf
+                # 1. Update Excel and HTML dashboard
                 asyncio.run(update_spreadsheet.main_pipeline())
-                asyncio.run(generate_shareable_pdf.generate_a4_executive_pdf())
-                asyncio.run(ensure_preview_images())
-                st.success("✅ Dashboard, Excel & PDF synchronized successfully!")
+
+                # 2. Attempt PDF generation if headless browser is available
+                try:
+                    import generate_shareable_pdf
+                    asyncio.run(generate_shareable_pdf.generate_a4_executive_pdf())
+                except Exception as pdf_err:
+                    print(f"PDF generation notice ({pdf_err})")
+
+                # 3. Attempt preview screenshots if headless browser is available
+                try:
+                    asyncio.run(ensure_preview_images())
+                except Exception as prev_err:
+                    print(f"Preview capture notice ({prev_err})")
+
+                st.success("✅ Dashboard, Excel & Live Feeds synchronized successfully!")
                 st.rerun()
             except Exception as e:
                 st.error(f"Execution Error: {e}")
